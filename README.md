@@ -1,4 +1,3 @@
-=======
 # AA174A/274A Reference Autonomy Stack
 
 This is the TA implementation of what a student (group) needs to build throughout the quarter
