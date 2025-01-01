@@ -1,5 +1,3 @@
-<<<<<<< HEAD
-# asl-tb3-aiet
 =======
 # AA174A/274A Reference Autonomy Stack
 
@@ -58,4 +56,3 @@ in console:
 ```sh
 Finished exploring
 ```
->>>>>>> 51df75c (Initial Commit)
