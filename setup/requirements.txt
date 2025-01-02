@@ -1,3 +1,4 @@
+ament-copyright==0.12.11
 ament-cppcheck==0.12.11
 ament-cpplint==0.12.11
 ament-flake8==0.12.11
