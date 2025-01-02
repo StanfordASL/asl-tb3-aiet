@@ -2,23 +2,9 @@
 
 This is cloned implementation of the AA174/274 Autonomy Stack
 
-## Build Instruction
+## Setup machine and build instructions.
 
-1. Build a turtlebot3 workspace following
-   [this guide](https://github.com/StanfordASL/asl-tb3-utils).
-2. Clone this repo into a seperate workspace (e.g. `~/my_ws/src`)
-    ```sh
-    mkdir -p ~/my_ws/src && cd ~/my_ws/src
-    git clone https://github.com/StanfordASL/asl-tb3-autonomy.git
-    ```
-3. Instal dependencies (might not be necessary but just to be safe)
-    ```sh
-    rosdep update && rosdep install --from-paths ~/my_ws/src -r -i -y
-    ```
-4. Build and install
-    ```sh
-    cd ~/my_ws && colcon build --symlink-install
-    ```
+1. Follow this [guide](https://dafaistudio.notion.site/Installation-Guide-16e777dc07818011ae82f3ed1f07aa99?pvs=4).
 
 ## Launch Files
 Before launching anything, make sure either a hardware or simulated
