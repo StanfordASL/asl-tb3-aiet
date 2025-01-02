@@ -1,4 +1,3 @@
-action-msgs==1.2.1
 actionlib-msgs==4.2.4
 actuator-msgs==0.0.1
 ament-cmake-test==1.3.10
