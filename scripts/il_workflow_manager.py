@@ -20,12 +20,13 @@ class ILWorkflowManager:
             robot_id = laptop_id.split('-')[-1]
 
         self.robot_id = robot_id.zfill(2)
+        self.checkpoint_name = "IL_model_checkpoint"
 
         # Set up paths
-        self.base_dir = Path.home() / "e2e_section"
+        self.base_dir = Path.home() / "section_assets"
         self.local_data_dir = self.base_dir / "driving_data"
         self.processed_data_path = self.local_data_dir / "processed_data.pkl"
-        self.model_path = self.base_dir / "model_checkpoint.pth"
+        self.model_path = self.base_dir / f"{self.checkpoint_name}.pth"
         self.autonomy_dir = Path.home() / "autonomy_ws" / "src" / "asl-tb3-aiet" / "scripts"
 
         # Ensure directories exist
@@ -263,7 +264,7 @@ class ILWorkflowManager:
         folder_path = f"{self.drive_base_path}/{self.robot_folder}"
         folder_id = self.get_or_create_folder(service, folder_path)
         
-        query = f"name='model_checkpoint.pth' and '{folder_id}' in parents"
+        query = f"name='{self.checkpoint_name}.pth' and '{folder_id}' in parents"
         results = service.files().list(q=query, fields='files(id)').execute()
         files = results.get('files', [])
         

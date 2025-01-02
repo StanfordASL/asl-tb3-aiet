@@ -61,6 +61,6 @@ echo "alias stop_recording='ros2 topic pub /data_collection_command std_msgs/msg
 echo "alias teleop='ros2 run asl_tb3_aiet keyboard_teleop.py'" >> ~/.bashrc
 
 echo "Creating folder structures"
-mkdir ~/e2e_section
+mkdir ~/section_assets
 
 echo "Done!"

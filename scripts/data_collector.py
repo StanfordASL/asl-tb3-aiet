@@ -20,7 +20,7 @@ class DataCollector(Node):
         self.bridge = CvBridge()
         
         # Initialize data storage
-        self.data_dir = self.declare_parameter('data_dir', os.path.expanduser('~/driving_data')).value
+        self.data_dir = self.declare_parameter('data_dir', os.path.expanduser('~/section_assets/driving_data')).value
         
         # Create subscribers
         self.image_sub = self.create_subscription(

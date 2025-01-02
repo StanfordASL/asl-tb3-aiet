@@ -185,7 +185,7 @@ def load_processed_data(data_dir):
     print(f"Target shape: {np.array(targets).shape}")
 
 if __name__ == "__main__":
-    data_dir = os.path.expanduser("~/e2e_section/driving_data")
+    data_dir = os.path.expanduser("~/section_assets/driving_data")
     process_dataset(data_dir)
 
     # load_processed_data(data_dir)

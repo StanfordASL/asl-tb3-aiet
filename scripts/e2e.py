@@ -37,7 +37,7 @@ class ILController(BaseController):
         self.feature_extractor.to(self.device)
         
         # Load IL model
-        self.IL_model_path = os.path.expanduser("~/e2e_section/model_checkpoint.pth")
+        self.IL_model_path = os.path.expanduser("~/section_assets/model_checkpoint.pth")
         self.il_model = self.load_il_model()
         self.il_model.eval()
         self.il_model.to(self.device)
@@ -57,7 +57,7 @@ class ILController(BaseController):
         )
 
         # Load dataset statistics for normalization
-        data_dir = os.path.expanduser("~/e2e_section/driving_data")
+        data_dir = os.path.expanduser("~/section_assets/driving_data")
         with open(os.path.join(data_dir, 'processed_data.pkl'), 'rb') as f:
             dataset = pickle.load(f)
         self.feature_mean = np.mean(dataset['features'], axis=0)
