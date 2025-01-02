@@ -26,7 +26,7 @@ class ILWorkflowManager:
         self.local_data_dir = self.base_dir / "driving_data"
         self.processed_data_path = self.local_data_dir / "processed_data.pkl"
         self.model_path = self.base_dir / "model_checkpoint.pth"
-        self.autonomy_dir = Path.home() / "autonomy_ws" / "src" / "asl-tb3-autonomy" / "scripts"
+        self.autonomy_dir = Path.home() / "autonomy_ws" / "src" / "asl-tb3-aiet" / "scripts"
 
         # Ensure directories exist
         self.local_data_dir.mkdir(parents=True, exist_ok=True)
