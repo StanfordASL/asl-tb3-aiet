@@ -20,7 +20,7 @@ def generate_launch_description():
                 launch_arguments={
                     "config": PathJoinSubstitution(
                         [
-                            FindPackageShare("asl_tb3_autonomy"),
+                            FindPackageShare("asl_tb3_aiet"),
                             "rviz",
                             "default.rviz",
                         ]
@@ -38,20 +38,20 @@ def generate_launch_description():
             # localization node
             Node(
                 executable="localize_targets.py",
-                package="asl_tb3_autonomy",
+                package="asl_tb3_aiet",
             ),
 
             # navigatior node - listening on /cmd_nav
             Node(
                 executable="navigator.py",
-                package="asl_tb3_autonomy",
+                package="asl_tb3_aiet",
                 parameters=[{"use_sim_time": use_sim_time}]
             ),
 
             # task executor controller
             Node(
                 executable="task_execution.py",
-                package="asl_tb3_autonomy",
+                package="asl_tb3_aiet",
             )
         ]
     )

@@ -18,7 +18,7 @@ def generate_launch_description():
 
     # Create the data collector node
     data_collector_node = Node(
-        package='asl_tb3_autonomy',
+        package='asl_tb3_aiet',
         executable='data_collector.py',
         name='data_collector',
         output='screen',
@@ -36,7 +36,7 @@ def generate_launch_description():
                 launch_arguments={
                     "config": PathJoinSubstitution(
                         [
-                            FindPackageShare("asl_tb3_autonomy"),
+                            FindPackageShare("asl_tb3_aiet"),
                             "rviz",
                             "default.rviz",
                         ]

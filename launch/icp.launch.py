@@ -17,7 +17,7 @@ def generate_launch_description():
             PathJoinSubstitution([FindPackageShare("asl_tb3_sim"), "launch", "rviz.launch.py"]),
             launch_arguments={
                 "config": PathJoinSubstitution([
-                    FindPackageShare("asl_tb3_autonomy"),
+                    FindPackageShare("asl_tb3_aiet"),
                     "rviz",
                     "default.rviz",
                 ]),
@@ -43,7 +43,7 @@ def generate_launch_description():
         # student's icp node
         Node(
             executable="icp_node.py",
-            package="asl_tb3_autonomy",
+            package="asl_tb3_aiet",
             parameters=[{"use_sim_time": use_sim_time}]
         )
     ])

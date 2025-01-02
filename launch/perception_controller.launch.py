@@ -20,7 +20,7 @@ def generate_launch_description():
                 launch_arguments={
                     "config": PathJoinSubstitution(
                         [
-                            FindPackageShare("asl_tb3_autonomy"),
+                            FindPackageShare("asl_tb3_aiet"),
                             "rviz",
                             "default.rviz",
                         ]
@@ -36,7 +36,7 @@ def generate_launch_description():
             # student's heading controller node
             Node(
                 executable="perception_controller.py",
-                package="asl_tb3_autonomy",
+                package="asl_tb3_aiet",
             ),
         ]
     )
