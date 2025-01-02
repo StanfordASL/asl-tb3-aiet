@@ -58,6 +58,6 @@ echo "export TURTLEBOT3_MODEL=burger" >> ~/.bashrc
 
 echo "alias start_recording='ros2 topic pub /data_collection_command std_msgs/msg/String \"data: 'start'\" -1'" >> ~/.bashrc
 echo "alias stop_recording='ros2 topic pub /data_collection_command std_msgs/msg/String \"data: 'stop'\" -1'" >> ~/.bashrc
-alias teleop='ros2 run asl_tb3_aiet keyboard_teleop.py'
+echo "alias teleop='ros2 run asl_tb3_aiet keyboard_teleop.py'" >> ~/.bashrc
 
 echo "Done!"
