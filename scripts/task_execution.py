@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 from task_base import TaskExecutorBase, TaskState, Target
 from asl_tb3_msgs.msg import TurtleBotControl
-from asl_tb3_autonomy.msg import TargetMarker
+from asl_tb3_aiet.msg import TargetMarker
 from rclpy.parameter import Parameter
 import rclpy
 
 class SequentialTaskExecutor(TaskExecutorBase):
     def __init__(self):
         super().__init__("sequential_task_executor")
-        self.rotation_speed = 0.2  # rad/s for searching
+        self.rotation_speed = 0.5  # rad/s for searching
         self.wait_duration = 5.0  # seconds
         
         # Add parameters like PerceptionController
@@ -111,8 +111,8 @@ class SequentialTaskExecutor(TaskExecutorBase):
 
         TODO: Define movement commands for the robot based on its state.
         Hint:
-        - For `TaskState.SEARCHING`, set the angular velocity (`control.omega`) to `self.rotation_speed` to rotate in place.
-        - For `TaskState.STOP` or `TaskState.FINISHED`, set both `control.v` and `control.omega` to 0 to keep the robot stationary.
+        - For `TaskState.SEARCHING`, set the angular velocity (`control.omega`) or the linear velocity (self.v) to find target.
+        - For `TaskState.STOP` or `TaskState.FINISHED`, set both `control.v` and `control.omega` appropriately
         - Use the `TurtleBotControl` message to assign velocity commands.
         """
                     

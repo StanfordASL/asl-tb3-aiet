@@ -9,6 +9,7 @@ from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload, MediaIoBaseDownload
 import json
+from preprocess_data import ILPreProcessManager
 
 class ILWorkflowManager:
     def __init__(self, robot_id=None, verbose=False):
@@ -27,7 +28,7 @@ class ILWorkflowManager:
         self.local_data_dir = self.base_dir / "driving_data"
         self.processed_data_path = self.local_data_dir / "processed_data.pkl"
         self.model_path = self.base_dir / f"{self.checkpoint_name}.pth"
-        self.autonomy_dir = Path.home() / "autonomy_ws" / "src" / "asl-tb3-aiet" / "scripts"
+        self.autonomy_dir = Path.home() / "autonomy_ws" / "src" / "asl-tb3-aeit" / "scripts"
 
         # Ensure directories exist
         self.local_data_dir.mkdir(parents=True, exist_ok=True)
@@ -149,12 +150,12 @@ class ILWorkflowManager:
             print("Preprocessed data already exists, skipping preprocessing step...")
             return
 
-        print("Running preprocessing script...")
+        print("Running IL Preprocessing...")
         try:
-            subprocess.run([sys.executable, "preprocess_data.py"], 
-                         cwd=self.autonomy_dir, check=True)
+            ILmanager = ILPreProcessManager()
+            ILmanager.process_dataset(self.local_data_dir)
         except subprocess.CalledProcessError as e:
-            print(f"Error running preprocessing script: {e}")
+            print(f"Error running IL PreProcessing: {e}")
             raise
 
     def upload_to_drive(self, service):

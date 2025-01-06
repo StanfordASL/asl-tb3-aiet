@@ -4,7 +4,7 @@ from typing import Dict, Optional
 from dataclasses import dataclass
 from asl_tb3_lib.control import BaseController
 from asl_tb3_msgs.msg import TurtleBotControl, TurtleBotState
-from asl_tb3_autonomy.msg import TargetMarker
+from asl_tb3_aiet.msg import TargetMarker
 from std_msgs.msg import Bool
 
 @dataclass

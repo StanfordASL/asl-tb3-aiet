@@ -12,14 +12,10 @@ from torchvision import transforms
 from torchvision.models.detection import ssdlite320_mobilenet_v3_large
 from asl_tb3_lib.control import BaseController
 from asl_tb3_msgs.msg import TurtleBotControl
-from preprocess_data import extract_features, decode_velocities, predict
+from preprocess_data import ILPreProcessManager
 import pickle
 import os
-
-# TODO: Copy and paste your MLP class implementation from the training notebook here.
-# Hint: Ensure your MLP class has the same structure and functionality as in the training notebook, 
-#       including the __init__ and forward methods. This will allow the deployment script 
-#       to use the trained model for inference.
+import torchvision
 
 class ILController(BaseController):
     def __init__(self):
@@ -32,13 +28,25 @@ class ILController(BaseController):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         
         # Load feature extractor
-        self.feature_extractor = ssdlite320_mobilenet_v3_large(pretrained=True)
+        model_path = os.path.expanduser("~/section_assets/finetuned_ssd_model.pth")
+        if os.path.exists(model_path):
+            self.get_logger().info("Using finetuned model to preprocess features for inference")
+            # Use COCO_V1 weights like in training
+            self.feature_extractor = ssdlite320_mobilenet_v3_large(
+                weights=torchvision.models.detection.SSDLite320_MobileNet_V3_Large_Weights.COCO_V1
+            )
+            state_dict = torch.load(self.cv_model_path, map_location=self.device, weights_only=True)
+            self.feature_extractor.load_state_dict(state_dict)
+        else:
+            self.get_logger().info("Using default SSD model to preprocess features for inference")
+            self.feature_extractor = ssdlite320_mobilenet_v3_large(pretrained=True)
+
         self.feature_extractor.eval()
         self.feature_extractor.to(self.device)
         
         # Load IL model
-        self.IL_model_path = os.path.expanduser("~/section_assets/model_checkpoint.pth")
-        self.il_model = self.load_il_model()
+        self.IL_model_path = os.path.expanduser("~/section_assets/IL_model_checkpoint.pth")
+        self.il_model = torch.load(self.IL_model_path, map_location=self.device)['model']
         self.il_model.eval()
         self.il_model.to(self.device)
         
@@ -68,18 +76,6 @@ class ILController(BaseController):
         self.last_control.v = 0.0
         self.last_control.omega = 0.0
         self.control_counter = 0
-    
-    def load_il_model(self):
-        checkpoint = torch.load(self.IL_model_path, map_location=self.device)
-        
-        # Get model class and create new instance
-        ModelClass = checkpoint['model_class']
-        model = ModelClass(**checkpoint['model_config'])
-        
-        # Load state
-        model.load_state_dict(checkpoint['model_state_dict'])
-        
-        return model
 
     def image_callback(self, msg):
         try:
@@ -106,7 +102,8 @@ class ILController(BaseController):
             img_tensor = img_tensor.unsqueeze(0).to(self.device)
             
             # Extract features using your original function
-            feature_tensor = extract_features(self.feature_extractor, img_tensor)
+            ILEpreprocessor = ILPreProcessManager()
+            feature_tensor = ILEpreprocessor.extract_features(self.feature_extractor, img_tensor)
             features_pooled = torch.amax(feature_tensor, dim=(2, 3)).squeeze(0)
             
             # Normalize features
@@ -114,10 +111,10 @@ class ILController(BaseController):
             features_tensor = torch.tensor(features_normalized, dtype=torch.float32).unsqueeze(0).to(self.device)
             
             # Get prediction from IL model
-            action = predict(self.il_model, features_tensor, self.device)
+            action = ILEpreprocessor.predict(self.il_model, features_tensor, self.device)
             
             # Use your original decode_velocities function
-            velocities = decode_velocities(action[np.newaxis, :])[0]
+            velocities = ILEpreprocessor.decode_velocities(action[np.newaxis, :])[0]
             self.get_logger().info(f"Velocities: {velocities}")
             
             # Create and return control message

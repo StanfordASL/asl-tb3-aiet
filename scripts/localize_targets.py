@@ -11,8 +11,8 @@ from std_msgs.msg import Bool, String
 import math
 import numpy as np
 from scipy.spatial import ConvexHull
-import time
-
+from typing import Dict
+from task_base import Target
 
 class TargetLocalizer(Node):
     def __init__(self):
@@ -29,15 +29,17 @@ class TargetLocalizer(Node):
         self.target_marker_pub = self.create_publisher(TargetMarker, '/target_marker', 10)
 
         # Setup localizer parameters
-        self.declare_parameter("cluster_radius", 0.5)           # radius to cluster LIDAR data (meters)
-        self.declare_parameter("distance_buffer", 0.5)          # offset distance from location to ensure conflict-free (meters)
-        self.declare_parameter("search_fov", 30)                # Angle of search for target (deg)
+        # Increasing the cluster_radius and search_fov should allow for more flexibility
+        self.declare_parameter("cluster_radius", 0.3)           # radius to cluster LIDAR data (meters)
+        self.declare_parameter("distance_buffer", 0.4)          # offset distance from location to ensure conflict-free (meters)
+        self.declare_parameter("search_fov", 35)                # Angle of search for target (deg)
 
         # Add marker tracking and timestamp tracking
         self.marker_ids = {
             "stop sign": 0,
             "traffic light": 100  # Use different base IDs for different targets
         }
+        self.target_database: Dict[str, Target] = {}
         self.latest_detection_time = None
         self.latest_detection_id = None
         self.processing_delay = 2.0  # 100ms delay to ensure we get fresh laser data
@@ -202,10 +204,17 @@ class TargetLocalizer(Node):
             # self.get_logger().info(f"Centroid angle: {math.degrees(centroid_angle)} degrees")
 
             # Publish the centroid to /cmd_nav
-            self.publish_target(target_id, centroid, centroid_angle)
+            target_msg = self.publish_target(target_id, centroid, centroid_angle)
 
             # Publish visualization markers
-            self.publish_viz_markers(target_id, bounding_box, centroid)
+            if target_msg.target_type not in self.target_database:
+                self.target_database[target_msg.target_type] = Target(
+                    x=target_msg.x,
+                    y=target_msg.y,
+                    theta=target_msg.theta,
+                    confidence=target_msg.confidence
+                )
+                self.publish_viz_markers(target_id, bounding_box, centroid)
         else:
             self.get_logger().info("Not enough points to compute convex hull.")
         
@@ -348,6 +357,8 @@ class TargetLocalizer(Node):
 
         # Publish the centroid message
         self.target_marker_pub.publish(centroid_msg)
+
+        return centroid_msg
 
 
 def main(args=None):

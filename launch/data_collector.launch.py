@@ -12,7 +12,7 @@ def generate_launch_description():
     # Declare the data directory argument
     data_dir_arg = DeclareLaunchArgument(
         'data_dir',
-        default_value=[EnvironmentVariable('HOME'), '/driving_data'],
+        default_value=[EnvironmentVariable('HOME'), '/section_assets/driving_data'],
         description='Directory to store collected data'
     )
 
