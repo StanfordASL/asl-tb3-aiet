@@ -46,7 +46,7 @@ GZ_VERSION=garden colcon build --symlink-install
 
 echo "Installing Python Packages..."
 sudo curl -sSL https://raw.githubusercontent.com/StanfordASL/asl-tb3-aiet/refs/heads/main/setup/requirements.txt -o ~/Downloads/requirements.txt
-for package in $(cat requirements.txt); do pip install $package || true; done
+for package in $(cat ~/Downloads/requirements.txt); do pip install $package || true; done
 rm -f ~/Downloads/requirements.txt
 
 echo "Updating ~/.bashrc to include setup scripts"
