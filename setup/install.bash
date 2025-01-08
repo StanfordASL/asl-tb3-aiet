@@ -62,7 +62,7 @@ echo "alias start_recording='ros2 topic pub /data_collection_command std_msgs/ms
 echo "alias stop_recording='ros2 topic pub /data_collection_command std_msgs/msg/String \"data: 'stop'\" -1'" >> ~/.bashrc
 echo "alias teleop='ros2 run asl_tb3_aiet keyboard_teleop.py'" >> ~/.bashrc
 echo "alias collect_data='start_recording; teleop; stop_recording'" >> ~/.bashrc
-echo "alias label_data='/home/jjalora/.local/bin/label-studio start'" >> ~/.bashrc
+echo "alias label_data='/home/aa274/.local/bin/label-studio start'" >> ~/.bashrc
 
 echo "Creating folder structures"
 mkdir ~/section_assets
