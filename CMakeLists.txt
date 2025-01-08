@@ -22,7 +22,6 @@ install(PROGRAMS
     scripts/icp_node.py
     scripts/icp_node_scpd.py
     scripts/data_collector.py
-    scripts/get_laser_sector.py
     scripts/localize_targets.py
     scripts/task_execution.py
     scripts/e2e.py
