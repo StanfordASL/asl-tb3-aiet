@@ -4,7 +4,7 @@ echo "Installing apt dependencies..."
 sudo apt -qq update && sudo apt upgrade -y
 sudo apt install git curl software-properties-common lsb-release wget gnupg git \
                  python3-dev python3-venv python3-pip cmake build-essential vim \
-                 tmux htop gh label-studio -y
+                 tmux htop gh -y
 
 echo "Setting up config and vim"
 mkdir -p ~/.colcon
@@ -47,6 +47,7 @@ GZ_VERSION=garden colcon build --symlink-install
 echo "Installing Python Packages..."
 sudo curl -sSL https://raw.githubusercontent.com/StanfordASL/asl-tb3-aiet/refs/heads/main/setup/requirements.txt -o ~/Downloads/requirements.txt
 for package in $(cat ~/Downloads/requirements.txt); do pip install $package || true; done
+pip3 install label-studio
 rm -f ~/Downloads/requirements.txt
 
 echo "Updating ~/.bashrc to include setup scripts"
@@ -61,7 +62,7 @@ echo "alias start_recording='ros2 topic pub /data_collection_command std_msgs/ms
 echo "alias stop_recording='ros2 topic pub /data_collection_command std_msgs/msg/String \"data: 'stop'\" -1'" >> ~/.bashrc
 echo "alias teleop='ros2 run asl_tb3_aiet keyboard_teleop.py'" >> ~/.bashrc
 echo "alias collect_data='start_recording; teleop; stop_recording'" >> ~/.bashrc
-echo "alias label_data='label-studio start'"
+echo "alias label_data='/home/jjalora/.local/bin/label-studio start'" >> ~/.bashrc
 
 echo "Creating folder structures"
 mkdir ~/section_assets
