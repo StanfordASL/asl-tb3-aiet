@@ -15,8 +15,16 @@ class SequentialTaskExecutor(TaskExecutorBase):
         self.declare_parameter("active", True)
         self.declare_parameter("navigation_active", False)
         
-        # Store timer period
-        self.stored_timer_period = self.control_timer.timer_period_ns
+        # Create additional class properties
+        """
+        Initialize perception system and target tracking.
+        TODO: Set up target subscriber and data storage.
+
+        Hint:
+        - Create subscriber to listen for target detections
+        - Initialize storage for detected targets
+        - Define required targets for task completion
+        """
 
     @property
     def active(self) -> bool:
@@ -43,6 +51,22 @@ class SequentialTaskExecutor(TaskExecutorBase):
         """Get current system time in seconds"""
         return self.get_clock().now().nanoseconds / 1e9
     
+    ########################
+    # TODO: Student fill-in
+    ########################
+    def target_callback(self, msg: TargetMarker):
+        """
+        Process new target detections from perception system.
+        TODO: Store new targets in database and update perception.
+        
+        Hint:
+        - Check if target already exists in database
+        - Store target information including position and confidence
+        - Log any new target additions
+        - Process perception updates
+        """
+        pass
+
     ########################
     # TODO: Student fill-in  
     ########################
