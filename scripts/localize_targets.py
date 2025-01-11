@@ -59,6 +59,10 @@ class TargetLocalizer(Node):
     def state_callback(self, msg):
         self.state = msg
     
+    def start_detect_sub(self):
+        if self.imu_data != None and self.scan_data != None and self.state != None and self.detector_class_sub == None:
+            self.detector_class_sub = self.create_subscription(String, '/detector_class', self.localize_targets_callback, 10)
+    
     @property
     def cluster_radius(self) -> float:
         return self.get_parameter("cluster_radius").value
