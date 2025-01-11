@@ -38,28 +38,12 @@ class TaskExecutorBase(BaseController):
         self.in_planning = False
         
         # Additional subscribers beyond BaseController
-        self.target_sub = self.create_subscription(
-            TargetMarker, '/target_marker', self.target_callback, 10)
         self.nav_success_sub = self.create_subscription(
             Bool, '/nav_success', self.nav_success_callback, 10)
             
         # Additional publisher beyond BaseController
         self.cmd_nav_pub = self.create_publisher(
             TurtleBotState, '/cmd_nav', 10)
-
-    def target_callback(self, msg: TargetMarker):
-        """Process new target detections"""
-        # Store target if not already in database
-        if msg.target_type not in self.target_database:
-            self.target_database[msg.target_type] = Target(
-                x=msg.x,
-                y=msg.y,
-                theta=msg.theta,
-                confidence=msg.confidence
-            )
-            self.get_logger().info(f"Added {msg.target_type} to database")
-            
-        self.process_perception(msg)
     
     def nav_success_callback(self, msg: Bool):
         """Handle navigation completion"""
@@ -73,14 +57,6 @@ class TaskExecutorBase(BaseController):
         """Check if all required targets are in database"""
         return all(target in self.target_database 
                   for target in self.required_targets)
-
-    def send_nav_command(self, target: Target):
-        """Send navigation command"""
-        msg = TurtleBotState()
-        msg.x = target.x
-        msg.y = target.y
-        msg.theta = target.theta
-        self.cmd_nav_pub.publish(msg)
     
     def clear_database(self):
         """Clear the target database"""

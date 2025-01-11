@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from task_base import TaskExecutorBase, TaskState, Target
-from asl_tb3_msgs.msg import TurtleBotControl
+from asl_tb3_msgs.msg import TurtleBotControl, TurtleBotState
 from asl_tb3_aiet.msg import TargetMarker
 from rclpy.parameter import Parameter
 import rclpy
@@ -141,6 +141,17 @@ class SequentialTaskExecutor(TaskExecutorBase):
         """
                     
         return control
+    
+    def send_nav_command(self, target: Target):
+        """Send navigation command
+        
+        TODO: Send navigation command to move robot to target.
+        Hint:
+        - Create TurtleBotState message with target pose information
+        - Set x, y, theta from target coordinates
+        - Publish command using navigation publisher
+        """
+        pass
 
 def main():
     rclpy.init()
