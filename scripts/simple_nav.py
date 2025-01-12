@@ -89,7 +89,7 @@ class SimpleNav(TaskExecutorBase):
         # TODO: Update the attributes of target_state
 
         self.get_logger().info(f"Navigation target set:")
-        self.get_logger().info(f"x: {current_x}, y: {current_y}, theta: {current_theta} --> x: {x}, y: {y}, theta: {theta}")
+        self.get_logger().info(f"x: {current_x:.3f}, y: {current_y:.3f}, theta: {current_theta:.3f} --> x: {x:.3f}, y: {y:.3f}, theta: {theta:.3f}")
 
         # TODO: Publish target_state to your /cmd_nav publisher
 
