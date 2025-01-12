@@ -20,7 +20,7 @@ class SimpleNav(TaskExecutorBase):
         # Stop inhereted control loop
         self.control_timer.cancel()
 
-        # Create new main loop
+        # Create new main loop, running at 10 Hz
         self.main_timer = self.create_timer(0.1, self.main_loop)
 
         # State machine variables
@@ -49,7 +49,16 @@ class SimpleNav(TaskExecutorBase):
         self.nav_state_sub = self.create_subscription(Bool, "/nav_success", self.nav_success_callback, 10)
 
         # Publishers
-        # TODO: Publish navigation goal commands to /cmd_nav using self.create_publisher()
+        """
+        Publish navigation goal commands to /cmd_nav using self.create_publisher()
+        Syntax hint:
+        self.example_pub = self.create_publisher(VariableType, "topic_to_publish_to", 10)
+        See the Section 1 instructions for how to view the topics you can publish to
+        You can call this publisher elswhere in your code after you have created it
+        Hint: The variable type of the state of a TurtleBot is TurtleBotState.
+        This variable contains x, y, and theta attributes in the global frame
+        """
+        # TODO: Add your code here
 
 
     # Callbacks
@@ -76,10 +85,13 @@ class SimpleNav(TaskExecutorBase):
         This message contains the desired pose (x, y, theta) for the TurtleBot. The passed goal message
         must be of type "TurtleBotState()". The navigation stack will plan and execute a path to reach this target
         """
-        # TODO: Add your code here
+        target_state = TurtleBotState()
+        # TODO: Update the attributes of target_state
 
         self.get_logger().info(f"Navigation target set:")
         self.get_logger().info(f"x: {current_x}, y: {current_y}, theta: {current_theta} --> x: {x}, y: {y}, theta: {theta}")
+
+        # TODO: Publish target_state to your /cmd_nav publisher
 
     def get_time_sec(self):
         current_time_sec = self.get_clock().now().nanoseconds / 1e9
@@ -141,18 +153,9 @@ class SimpleNav(TaskExecutorBase):
     def main_loop(self) -> None:
         if self.verbose: self.get_logger().info(f"Entered main_loop...")
         self.modular_challenge_fsm()
-    # --- END ---
 
+    # Note: compute_control is vestigial for this script. You can ignore it.
     def compute_control(self) -> TurtleBotControl:
-        """
-        Override from BaseController - this is the main control loop.
-
-        TODO: Implement the sense-think-act loop.
-        Hint:
-        - Use `self.perception_update()` to process perception data (sense).
-        - Call `self.decision_update()` to update the robot's state (think).
-        - Return the control command from `self.compute_action()` (act).
-        """
         if self.verbose: self.get_logger().info(f"Entered compute_control...")
         control = TurtleBotControl()
         control.v = 0.0
