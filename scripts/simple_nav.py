@@ -58,7 +58,10 @@ class SimpleNav(TaskExecutorBase):
         Hint: The variable type of the state of a TurtleBot is TurtleBotState.
         This variable contains x, y, and theta attributes in the global frame
         """
-        # TODO: Add your code here
+        # --- YOUR CODE HERE ---
+        # TODO: Create /cmd_nav publisher
+    
+        # --- END ---
 
 
     # Callbacks
@@ -86,12 +89,18 @@ class SimpleNav(TaskExecutorBase):
         must be of type "TurtleBotState()". The navigation stack will plan and execute a path to reach this target
         """
         target_state = TurtleBotState()
+        # --- YOUR CODE HERE ---
         # TODO: Update the attributes of target_state
+        
+        # --- END ---
 
         self.get_logger().info(f"Navigation target set:")
         self.get_logger().info(f"x: {current_x:.3f}, y: {current_y:.3f}, theta: {current_theta:.3f} --> x: {x:.3f}, y: {y:.3f}, theta: {theta:.3f}")
 
+        # --- YOUR CODE HERE ---
         # TODO: Publish target_state to your /cmd_nav publisher
+
+        # --- END ---
 
     def get_time_sec(self):
         current_time_sec = self.get_clock().now().nanoseconds / 1e9
@@ -124,7 +133,10 @@ class SimpleNav(TaskExecutorBase):
             - theta: maintains current orientation
             Use your pub_nav() function to handle publishing this goal to the navigation stack
             """
-            # TODO: Add your code here
+            # --- YOUR CODE HERE ---
+            # TODO: Navigate 0.5m in the +x direction
+            
+            # --- END ---
             
             self.switch_fsm_state("ROBOT_NAV_P1")
 
@@ -138,7 +150,10 @@ class SimpleNav(TaskExecutorBase):
                 - theta: rotates 180 degrees (i.e., self.phys_state.theta + π)
                 Use your pub_nav() function to handle publishing this goal to the navigation stack
                 """
-                # TODO: Add your code here
+                # --- YOUR CODE HERE ---
+                # TODO: Navigate 0.5m in the -x direction
+
+                # --- END ---
                 
                 self.switch_fsm_state("ROBOT_NAV_ORIGIN")
 
