@@ -130,9 +130,9 @@ class SimpleNav(TaskExecutorBase):
             Use your pub_nav() function to handle publishing this goal to the navigation stack
             """
             # TODO: Add your code here
-            # Move in global neg y direction without turning
-            x = self.phys_state.x + 0.0
-            y = self.phys_state.y - 0.5
+            # Move in global pos x direction without turning
+            x = self.phys_state.x + 0.5
+            y = self.phys_state.y + 0.0
             theta = self.phys_state.theta
             self.pub_nav(x, y, theta)
             
@@ -148,9 +148,9 @@ class SimpleNav(TaskExecutorBase):
                 Use your pub_nav() function to handle publishing this goal to the navigation stack
                 """
                 # TODO: Add your code here
-                # Turn 180 deg and move in the global pos y direction 
-                x = self.phys_state.x + 0.0
-                y = self.phys_state.y + 0.5
+                # Turn 180 deg and move in the global neg x direction 
+                x = self.phys_state.x - 0.5
+                y = self.phys_state.y + 0.0
                 theta = self.phys_state.theta + np.pi
                 self.pub_nav(x, y, theta)
 
