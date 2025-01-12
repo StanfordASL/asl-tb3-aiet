@@ -106,10 +106,9 @@ class SimpleNav(TaskExecutorBase):
             self.origin_state = self.phys_state
             
             """
-            Send navigation command for the TurtleBot to move -0.5 meters in the y-direction.
-            The target position is calculated relative to the current pose:
-            - x: remains unchanged (i.e., self.phys_state.x)
-            - y: moves -0.5 meters (i.e., self.phys_state.x - 0.5)
+            Send navigation command for the TurtleBot to move +0.5 meters in the x-direction.
+            - x: moves +0.5 meters (i.e., self.phys_state.x + 0.5)
+            - y: remains unchanged (i.e., self.phys_state.y)
             - theta: maintains current orientation
             Use your pub_nav() function to handle publishing this goal to the navigation stack
             """
@@ -121,10 +120,9 @@ class SimpleNav(TaskExecutorBase):
             if self.nav_success:
                 
                 """
-                Send navigation command for the TurtleBot to move 0.5 meters in the y-direction and rotate 180 degrees.
-                The target position is calculated relative to the current pose:
-                - x: remains unchanged (i.e., self.phys_state.x)
-                - y: moves +0.5 meters (i.e., self.phys_state.y + 0.5)
+                Send navigation command for the TurtleBot to move -0.5 meters in the x-direction and rotate 180 degrees.
+                - x: moves +0.5 meters (i.e., self.phys_state.x - 0.5)
+                - y: remains unchanged (i.e., self.phys_state.y)
                 - theta: rotates 180 degrees (i.e., self.phys_state.theta + π)
                 Use your pub_nav() function to handle publishing this goal to the navigation stack
                 """

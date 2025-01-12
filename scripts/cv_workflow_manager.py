@@ -16,7 +16,21 @@ Laptop ID -> Robot name pairing.
 See https://shorturl.at/Ab1ib for current pairing list
 """
 ROBOT_IDs = {
-   "00" : "judy",
+   "00" : "lucy",
+   "01" : "rudi",
+   "02" : "judy",
+   "03" : "harlan",
+   "04" : "orwell",
+   "05" : "astro",
+   "06" : "teddy",
+   "07" : "asteroid",
+   "08" : "petunia",
+   "09" : "marcia",
+   "10" : "montague",
+   "11" : "macc",
+   "12" : "henry",
+   "13" : "rosie",
+   "14" : "george",
 }
 
 class CVWorkflowManager:
