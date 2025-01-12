@@ -25,7 +25,7 @@ install(PROGRAMS
     scripts/localize_targets.py
     scripts/task_execution.py
     scripts/e2e.py
-    script/simple_nav.py
+    scripts/simple_nav.py
     DESTINATION lib/${PROJECT_NAME}
 )
 
