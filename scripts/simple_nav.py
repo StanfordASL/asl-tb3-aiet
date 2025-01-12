@@ -59,6 +59,7 @@ class SimpleNav(TaskExecutorBase):
         This variable contains x, y, and theta attributes in the global frame
         """
         # TODO: Add your code here
+        self.cmd_nav_pub = self.create_publisher(TurtleBotState, "cmd_nav", 10)
 
 
     # Callbacks
@@ -87,11 +88,15 @@ class SimpleNav(TaskExecutorBase):
         """
         target_state = TurtleBotState()
         # TODO: Update the attributes of target_state
+        target_state.x = x
+        target_state.y = y
+        target_state.theta = theta
 
         self.get_logger().info(f"Navigation target set:")
-        self.get_logger().info(f"x: {current_x}, y: {current_y}, theta: {current_theta} --> x: {x}, y: {y}, theta: {theta}")
+        self.get_logger().info(f"x: {current_x:.3f}, y: {current_y:.3f}, theta: {current_theta:.3f} --> x: {x:.3f}, y: {y:.3f}, theta: {theta:.3f}")
 
         # TODO: Publish target_state to your /cmd_nav publisher
+        self.cmd_nav_pub.publish(target_state)
 
     def get_time_sec(self):
         current_time_sec = self.get_clock().now().nanoseconds / 1e9
@@ -125,12 +130,16 @@ class SimpleNav(TaskExecutorBase):
             Use your pub_nav() function to handle publishing this goal to the navigation stack
             """
             # TODO: Add your code here
+            # Move in global neg y direction without turning
+            x = self.phys_state.x + 0.0
+            y = self.phys_state.y - 0.5
+            theta = self.phys_state.theta
+            self.pub_nav(x, y, theta)
             
             self.switch_fsm_state("ROBOT_NAV_P1")
 
         elif self.fsm_state == "ROBOT_NAV_P1":
             if self.nav_success:
-                
                 """
                 Send navigation command for the TurtleBot to move -0.5 meters in the x-direction and rotate 180 degrees.
                 - x: moves +0.5 meters (i.e., self.phys_state.x - 0.5)
@@ -139,7 +148,12 @@ class SimpleNav(TaskExecutorBase):
                 Use your pub_nav() function to handle publishing this goal to the navigation stack
                 """
                 # TODO: Add your code here
-                
+                # Turn 180 deg and move in the global pos y direction 
+                x = self.phys_state.x + 0.0
+                y = self.phys_state.y + 0.5
+                theta = self.phys_state.theta + np.pi
+                self.pub_nav(x, y, theta)
+
                 self.switch_fsm_state("ROBOT_NAV_ORIGIN")
 
         elif self.fsm_state == "ROBOT_NAV_ORIGIN":
