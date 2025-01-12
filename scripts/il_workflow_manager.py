@@ -193,6 +193,10 @@ class ILWorkflowManager:
                     media_body=media,
                     fields='id').execute()
             
+
+            permission = service.permissions().create(fileId=file["id"], body={'type': 'anyone', 
+                                                        'role': 'reader',}, fields='id').execute()
+
             print("Upload successful!")
             self.debug_print(f"File ID: {file.get('id')}")
             return file.get('id')

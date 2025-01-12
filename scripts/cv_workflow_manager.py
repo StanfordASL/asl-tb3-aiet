@@ -288,31 +288,35 @@ class CVWorkflowManager:
         try:
             print(f"Starting CV workflow for Robot {self.robot_id}")
 
-            print("1. Preprocessing data...")
-            self.preprocess_data()
+            # print("1. Preprocessing data...")
+            # self.preprocess_data()
             
-            print("2. Setting up Google Drive connection...")
+            # print("2. Setting up Google Drive connection...")
+            print("1. Setting up Google Drive connection...")
             service = self.setup_service_account()
             
             if self.verbose:
                 self.check_drive_access(service)
             
-            print("3. Upload processed data to Drive...")
+            # print("3. Upload processed data to Drive...")
+            print("2. Upload processed data to Drive...")
             folder_url = self.get_folder_url(service)
             if folder_url:
-                print(f"\nPlease upload dataset to drive using this link:\n{folder_url}")
-                print("\nMake sure to:")
-                print("1. Upload images_preprocessed/ data folder")
-                print("2. Upload result_preprocessed.json file")
-                input("\nPress Enter once training is complete...")
+                # print(f"\nPlease upload dataset to drive using this link:\n{folder_url}")
+                # print("\nMake sure to:")
+                # print("1. Upload images_preprocessed/ data folder")
+                # print("2. Upload result_preprocessed.json file")
+                # input("\nPress Enter once training is complete...")
                 
-                print("4. Downloading trained model...")
+                # print("4. Downloading trained model...")
+                print("3. Downloading trained model...")
                 if self.download_model(service):
                     print("Model downloaded successfully!\n")
                 else:
                     print("Failed to download model. Please check if training completed successfully.")
             
-            print("5. Upload computer vision model to robot")
+            # print("5. Upload computer vision model to robot")
+            print("4. Upload computer vision model to robot")
             print("\nMake sure to:")
             print("1. Turn robot on.")
             print(f"2. Ensure robot is on network (e.g., ping {self.robot_name}.local)")
