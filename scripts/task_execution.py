@@ -1,19 +1,47 @@
 #!/usr/bin/env python3
-from task_base import TaskExecutorBase, TaskState, Target
+from enum import Enum, auto
+from task_base import TaskExecutorBase, Target
 from asl_tb3_msgs.msg import TurtleBotControl, TurtleBotState
 from asl_tb3_aiet.msg import TargetMarker
 from rclpy.parameter import Parameter
 import rclpy
+from typing import Dict, Optional
+from std_msgs.msg import Bool
+
+class TaskState(Enum):
+    """States for the sequential navigation task"""
+    SEARCHING = auto()      # Looking for targets
+    NAV_TO_STOP = auto()    # Moving to stop sign
+    STOP = auto()          # Waiting at stop sign
+    NAV_TO_LIGHT = auto()   # Moving to traffic light
+    FINISHED = auto()       # Task completed
 
 class SequentialTaskExecutor(TaskExecutorBase):
     def __init__(self):
         super().__init__("sequential_task_executor")
-        self.rotation_speed = 0.5  # rad/s for searching
+        self.rotation_speed = 0.2  # rad/s for searching
         self.wait_duration = 5.0  # seconds
         
         # Add parameters like PerceptionController
         self.declare_parameter("active", True)
         self.declare_parameter("navigation_active", False)
+
+        # State management
+        self.current_state = TaskState.SEARCHING
+        self.target_database: Dict[str, Target] = {}
+        self.required_targets = {"stop sign", "traffic light"}
+        self.start_wait_time: Optional[float] = None
+        self.current_target = None
+        self.nav_success = False
+        self.in_planning = False
+
+        # Additional subscribers beyond BaseController
+        self.nav_success_sub = self.create_subscription(
+            Bool, '/nav_success', self.nav_success_callback, 10)
+            
+        # Additional publisher beyond BaseController
+        self.cmd_nav_pub = self.create_publisher(
+            TurtleBotState, '/cmd_nav', 10)
         
         # Create additional class properties
         """
@@ -22,9 +50,23 @@ class SequentialTaskExecutor(TaskExecutorBase):
 
         Hint:
         - Create subscriber to listen for target detections
-        - Initialize storage for detected targets
-        - Define required targets for task completion
         """
+        self.target_sub = self.create_subscription(
+            TargetMarker, '/target_marker', self.target_callback, 10)
+    
+    # =========== Start of Helper Functions =========== #
+    def nav_success_callback(self, msg: Bool):
+        """Handle navigation completion"""
+        if msg.data:
+            self.control_timer.reset()
+            
+        self.nav_success = msg.data
+    
+    @property
+    def database_complete(self) -> bool:
+        """Check if all required targets are in database"""
+        return all(target in self.target_database 
+                  for target in self.required_targets)
 
     @property
     def active(self) -> bool:
@@ -51,26 +93,56 @@ class SequentialTaskExecutor(TaskExecutorBase):
         """Get current system time in seconds"""
         return self.get_clock().now().nanoseconds / 1e9
     
-    ########################
-    # TODO: Student fill-in
-    ########################
     def target_callback(self, msg: TargetMarker):
+        self.current_target = msg
+        self.process_perception()
+        # self.get_logger().info(f"Found {msg.target_type}")
+    
+    def transition_state(self, next_state):
+        if self.current_state == TaskState.NAV_TO_LIGHT and self.nav_success:
+            self.start_wait_time = self.get_current_time()
+            self.current_state = next_state
+            self.get_logger().info(f"Transition from NAV_TO_LIGHT to STOP")
+            self.resume_control()
+            
+        elif self.current_state == TaskState.STOP:
+            current_time = self.get_current_time()
+            if self.start_wait_time is not None and current_time - self.start_wait_time >= self.wait_duration:
+                self.current_state = next_state
+                self.get_logger().info(f"Transition from STOP to NAV_TO_STOP")
+                
+        elif self.current_state == TaskState.NAV_TO_STOP and self.nav_success:
+            self.current_state = next_state
+            self.get_logger().info("Task complete!")
+            self.resume_control()
+
+        self.get_logger().info(f"DEBUG: My current state is {self.current_state}")
+    
+    # =========== End of Helper Functions =========== #
+
+    # =========== Start of student implementation below =========== #
+
+    def send_nav_command(self, target: Target):
         """
-        Process new target detections from perception system.
-        TODO: Store new targets in database and update perception.
-        
-        Hint:
-        - Check if target already exists in database
-        - Store target information including position and confidence
-        - Log any new target additions
-        - Process perception updates
+        Send navigation command to move robot to target.
+
+        TODO: Implement the navigation command publisher to move to targets.
+
+        Implementation hints:
+        1. Create a new TurtleBotState message
+        2. Set the target pose:
+           - x: target.x
+           - y: target.y
+           - theta: target.theta
+        3. Publish using self.cmd_nav_pub
+        4. Consider adding logging to track navigation commands
         """
+        ########################
+        # TODO: Student fill-in
+        ########################
         pass
 
-    ########################
-    # TODO: Student fill-in  
-    ########################
-    def process_perception(self, msg: TargetMarker):
+    def process_perception(self):
         """
         Process perception messages and update task state.
 
@@ -80,78 +152,110 @@ class SequentialTaskExecutor(TaskExecutorBase):
         - Use `self.database_complete` to check if all targets have been found.
         - Update the state to `TaskState.NAV_TO_STOP` when ready to navigate to the stop sign.
         """
+        ########################
+        # TODO: Student fill-in
+        ########################
+
         pass
 
-    ########################
-    # TODO: Student fill-in  
-    ########################
     def compute_control(self) -> TurtleBotControl:
         """
         Override from BaseController - this is the main control loop.
 
-        TODO: Implement the sense-think-act loop.
-        Hint:
-        - Use `self.perception_update()` to process perception data (sense).
-        - Call `self.decision_update()` to update the robot's state (think).
-        - Return the control command from `self.compute_action()` (act).
+        TODO: Implement the complete sense-think-act control loop for the robot.
+
+        Implementation hints:
+        1. Sensing: 
+           - Target detection is handled asynchronously by target_callback
+           - No additional sensing needed in this method
+        2. Thinking:
+           - Call self.decision_update() to process state transitions
+           - This updates the robot's internal state based on current conditions
+        3. Acting:
+           - Return self.compute_action() to generate appropriate control commands
+           - The control commands should match the current state
+        4. Return Value:
+           - Must return a TurtleBotControl message with appropriate v and omega values
         """
+        ########################
+        # TODO: Student fill-in
+        ########################
+        # NOTE: "See" component is handled asynchronously whenever target is detected via target_callback
+
         pass
 
-    ########################
-    # TODO: Student fill-in  
-    ########################
     def decision_update(self):
         """
         Update decision making based on current state.
 
-        TODO: Define how the system transitions between states.
-        Hint:
-        - For navigation states (e.g., `TaskState.NAV_TO_STOP`, `TaskState.NAV_TO_LIGHT`):
-          - Check if the current navigation target is valid (e.g., the target exists in the database).
-          - Initiate navigation to the target using an appropriate method (e.g., `self.start_navigation()`).
-          - Ensure that navigation is complete by checking a relevant flag (e.g., `self.nav_success`) before transitioning to the next state.
-          - Once navigation is complete, return control authority to the controller using a relevant method (e.g., `self.resume_control()`).
+        TODO: Implement the state machine logic for transitioning between task states.
 
-        - For waiting states (e.g., `TaskState.STOP`):
-          - Track the time spent in the current state.
-          - Transition to the next state when the wait duration (e.g., `self.wait_duration`) is reached.
+        Hints:
+        1. State Transitions:
+           SEARCHING -> NAV_TO_LIGHT:
+           - Trigger when self.database_complete is True
+           - Update current_state and begin navigation
 
-        - For final states (e.g., `TaskState.FINISHED`):
-          - Ensure all tasks are complete and clean up resources (e.g., clear the target database).
+           NAV_TO_LIGHT -> STOP:
+           - Trigger when navigation is successful (self.nav_success)
+           - Initialize self.start_wait_time with current time
+           - Resume control authority
 
-        Ensure that transitions are logical and depend on the current state, task conditions, and system flags.
+           STOP -> NAV_TO_STOP:
+           - Wait for self.wait_duration seconds
+           - Use self.get_current_time() to track elapsed time
+           - Begin navigation to stop sign
+
+           NAV_TO_STOP -> FINISHED:
+           - Trigger when navigation is successful
+           - Clean up and finalize task
+
+        2. Navigation States:
+           - Use self.in_planning to track active navigation
+           - Call self.start_navigation() with appropriate target
+           - Check self.nav_success to confirm arrival
+           - Use self.resume_control() when navigation is complete
+
+        3. Error Handling:
+           - Verify targets exist in database before navigation
+           - Handle cases where navigation fails
+           - Implement appropriate logging for state transitions
         """
+        ########################
+        # TODO: Student fill-in
+        ########################
         pass
-    
-    ########################
-    # TODO: Student fill-in  
-    ########################
+            
+            
     def compute_action(self) -> TurtleBotControl:
-        """Compute control command based on current state"""
-        control = TurtleBotControl()
-        
         """
         Compute control command based on current state.
 
-        TODO: Define movement commands for the robot based on its state.
-        Hint:
-        - For `TaskState.SEARCHING`, set the angular velocity (`control.omega`) or the linear velocity (self.v) to find target.
-        - For `TaskState.STOP` or `TaskState.FINISHED`, set both `control.v` and `control.omega` appropriately
-        - Use the `TurtleBotControl` message to assign velocity commands.
-        """
-                    
-        return control
-    
-    def send_nav_command(self, target: Target):
-        """Send navigation command
+        TODO: Implement state-specific control behaviors for the robot.
+
+        Implementation hints:
+        1. Create a new TurtleBotControl message for the command
         
-        TODO: Send navigation command to move robot to target.
-        Hint:
-        - Create TurtleBotState message with target pose information
-        - Set x, y, theta from target coordinates
-        - Publish command using navigation publisher
+        2. State-specific behaviors:
+           SEARCHING:
+           - Set omega = self.rotation_speed for rotation
+           - Set v = 0.0 to rotate in place
+           
+           STOP/FINISHED:
+           - Set both v and omega to 0.0 to remain stationary
+           
+           Other states:
+           - Navigation is handled by the navigation system
+           - Return zero velocities when not actively controlling
+
+        3. Return Value:
+           - Must return a TurtleBotControl message with appropriate
+             v (linear velocity) and omega (angular velocity) values
         """
         pass
+
+    # =========== End of student implementation below =========== #
+
 
 def main():
     rclpy.init()
