@@ -122,13 +122,16 @@ class SequentialTaskExecutor(TaskExecutorBase):
 
     def process_perception(self):
         """
-        Process perception messages and update task state.
-
-        TODO: Use perception input to determine the next task state.
-        Hint:
-        - Check the `self.current_state` to determine the current phase of the task.
-        - Use `self.database_complete` to check if all targets have been found.
-        - Update the state to `TaskState.NAV_TO_STOP` when ready to navigate to the stop sign.
+        Process newly detected targets and add them to the database.
+        
+        This function is called whenever a new target is detected via target_callback.
+        It should:
+        1. Check if the detected target is new (not in database)
+        2. If new, create a Target object with the target's:
+        - x, y position
+        - theta (orientation)
+        - confidence
+        3. Add the new Target object to target_database with target_type as key
         """
         ########################
         # TODO: Student fill-in
@@ -144,13 +147,15 @@ class SequentialTaskExecutor(TaskExecutorBase):
 
     def compute_control(self) -> TurtleBotControl:
         """
-        Override from BaseController - this is the main control loop.
-
-        TODO: Implement the sense-think-act loop.
-        Hint:
-        - Use `self.perception_update()` to process perception data (sense).
-        - Call `self.decision_update()` to update the robot's state (think).
-        - Return the control command from `self.compute_action()` (act).
+        Main control loop implementing the sense-think-act paradigm.
+        
+        This function should:
+        1. SENSE: Target detection is handled by target_callback
+        2. THINK: Call decision_update() to process state transitions
+        3. ACT: Return compute_action() to generate control commands
+        
+        Returns:
+            TurtleBotControl: Control command with appropriate v and omega values
         """
         ########################
         # TODO: Student fill-in
@@ -165,24 +170,25 @@ class SequentialTaskExecutor(TaskExecutorBase):
 
     def decision_update(self):
         """
-        Update decision making based on current state.
-
-        TODO: Define how the system transitions between states.
-        Hint:
-        - For navigation states (e.g., `TaskState.NAV_TO_STOP`, `TaskState.NAV_TO_LIGHT`):
-          - Check if the current navigation target is valid (e.g., the target exists in the database).
-          - Initiate navigation to the target using an appropriate method (e.g., `self.start_navigation()`).
-          - Ensure that navigation is complete by checking a relevant flag (e.g., `self.nav_success`) before transitioning to the next state.
-          - Once navigation is complete, return control authority to the controller using a relevant method (e.g., `self.resume_control()`).
-
-        - For waiting states (e.g., `TaskState.STOP`):
-          - Track the time spent in the current state.
-          - Transition to the next state when the wait duration (e.g., `self.wait_duration`) is reached.
-
-        - For final states (e.g., `TaskState.FINISHED`):
-          - Ensure all tasks are complete and clean up resources (e.g., clear the target database).
-
-        Ensure that transitions are logical and depend on the current state, task conditions, and system flags.
+        Update robot's state based on current conditions and transitions.
+        
+        State machine logic:
+        1. SEARCHING -> NAV_TO_LIGHT:
+        - Transition when database_complete is True
+        
+        2. NAV_TO_LIGHT:
+        - If not navigating (not in_planning) and traffic light in database:
+            * Start navigation to traffic light
+        - Check for transition to STOP state
+        
+        3. STOP:
+        - Track time spent waiting
+        - Transition to NAV_TO_STOP after wait_duration
+        
+        4. NAV_TO_STOP:
+        - If not navigating and stop sign in database:
+            * Start navigation to stop sign
+        - Check for transition to FINISHED state
         """
         ########################
         # TODO: Student fill-in
@@ -212,20 +218,24 @@ class SequentialTaskExecutor(TaskExecutorBase):
             
             
     def compute_action(self) -> TurtleBotControl:
-        """Compute control command based on current state"""
+
         control = TurtleBotControl()
+        """
+        Generate control commands based on current state.
         
+        State-specific behaviors:
+        1. SEARCHING:
+        - Rotate in place (v=0, omega=rotation_speed)
+        2. STOP/FINISHED:
+        - Remain stationary (v=0, omega=0)
+        3. Other states (NAV_TO_LIGHT, NAV_TO_STOP):
+        - Navigation handled by navigation system
+        
+        Returns:
+            TurtleBotControl: Message containing:
+            - v: Linear velocity (m/s)
+            - omega: Angular velocity (rad/s)
         """
-        Compute control command based on current state.
-
-        TODO: Define movement commands for the robot based on its state.
-        Hint:
-        - For `TaskState.SEARCHING`, set the angular velocity (`control.omega`) or the linear velocity (self.v) to find target.
-        - For `TaskState.STOP` or `TaskState.FINISHED`, set both `control.v` and `control.omega` appropriately
-        - Use the `TurtleBotControl` message to assign velocity commands.
-        """
-        control = TurtleBotControl()
-
         ########################
         # TODO: Student fill-in
         ########################
@@ -242,13 +252,18 @@ class SequentialTaskExecutor(TaskExecutorBase):
         return control
     
     def send_nav_command(self, target: Target):
-        """Send navigation command
+        """
+        Send navigation command to move robot to target location.
         
-        TODO: Send navigation command to move robot to target.
-        Hint:
-        - Create TurtleBotState message with target pose information
-        - Set x, y, theta from target coordinates
-        - Publish command using navigation publisher
+        Args:
+            target (Target): Target object containing:
+                - x, y: Target position coordinates
+                - theta: Target orientation
+        
+        Steps:
+        1. Create TurtleBotState message
+        2. Set goal position (x, y) and orientation (theta)
+        3. Publish command to navigation system via cmd_nav_pub
         """
         ########################
         # TODO: Student fill-in
