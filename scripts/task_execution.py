@@ -124,18 +124,17 @@ class SequentialTaskExecutor(TaskExecutorBase):
 
     def send_nav_command(self, target: Target):
         """
-        Send navigation command to move robot to target.
-
-        TODO: Implement the navigation command publisher to move to targets.
-
-        Implementation hints:
-        1. Create a new TurtleBotState message
-        2. Set the target pose:
-           - x: target.x
-           - y: target.y
-           - theta: target.theta
-        3. Publish using self.cmd_nav_pub
-        4. Consider adding logging to track navigation commands
+        Send navigation command to move robot to target location.
+        
+        Args:
+            target (Target): Target object containing:
+                - x, y: Target position coordinates
+                - theta: Target orientation
+        
+        Steps:
+        1. Create TurtleBotState message
+        2. Set goal position (x, y) and orientation (theta)
+        3. Publish command to navigation system via cmd_nav_pub
         """
         ########################
         # TODO: Student fill-in
@@ -144,13 +143,16 @@ class SequentialTaskExecutor(TaskExecutorBase):
 
     def process_perception(self):
         """
-        Process perception messages and update task state.
-
-        TODO: Use perception input to determine the next task state.
-        Hint:
-        - Check the `self.current_state` to determine the current phase of the task.
-        - Use `self.database_complete` to check if all targets have been found.
-        - Update the state to `TaskState.NAV_TO_STOP` when ready to navigate to the stop sign.
+        Process newly detected targets and add them to the database.
+        
+        This function is called whenever a new target is detected via target_callback.
+        It should:
+        1. Check if the detected target is new (not in database)
+        2. If new, create a Target object with the target's:
+        - x, y position
+        - theta (orientation)
+        - confidence
+        3. Add the new Target object to target_database with target_type as key
         """
         ########################
         # TODO: Student fill-in
@@ -160,98 +162,76 @@ class SequentialTaskExecutor(TaskExecutorBase):
 
     def compute_control(self) -> TurtleBotControl:
         """
-        Override from BaseController - this is the main control loop.
-
-        TODO: Implement the complete sense-think-act control loop for the robot.
-
-        Implementation hints:
-        1. Sensing: 
-           - Target detection is handled asynchronously by target_callback
-           - No additional sensing needed in this method
-        2. Thinking:
-           - Call self.decision_update() to process state transitions
-           - This updates the robot's internal state based on current conditions
-        3. Acting:
-           - Return self.compute_action() to generate appropriate control commands
-           - The control commands should match the current state
-        4. Return Value:
-           - Must return a TurtleBotControl message with appropriate v and omega values
+        Main control loop implementing the sense-think-act paradigm.
+        
+        This function should:
+        1. SENSE: Target detection is handled by target_callback
+        2. THINK: Call decision_update() to process state transitions
+        3. ACT: Return compute_action() to generate control commands
+        
+        Returns:
+            TurtleBotControl: Control command with appropriate v and omega values
         """
         ########################
         # TODO: Student fill-in
         ########################
-        # NOTE: "See" component is handled asynchronously whenever target is detected via target_callback
+        # NOTE: See component is handled asynchronously whenever target is detected via target_callback
 
         pass
 
     def decision_update(self):
         """
-        Update decision making based on current state.
-
-        TODO: Implement the state machine logic for transitioning between task states.
-
-        Hints:
-        1. State Transitions:
-           SEARCHING -> NAV_TO_LIGHT:
-           - Trigger when self.database_complete is True
-           - Update current_state and begin navigation
-
-           NAV_TO_LIGHT -> STOP:
-           - Trigger when navigation is successful (self.nav_success)
-           - Initialize self.start_wait_time with current time
-           - Resume control authority
-
-           STOP -> NAV_TO_STOP:
-           - Wait for self.wait_duration seconds
-           - Use self.get_current_time() to track elapsed time
-           - Begin navigation to stop sign
-
-           NAV_TO_STOP -> FINISHED:
-           - Trigger when navigation is successful
-           - Clean up and finalize task
-
-        2. Navigation States:
-           - Use self.in_planning to track active navigation
-           - Call self.start_navigation() with appropriate target
-           - Check self.nav_success to confirm arrival
-           - Use self.resume_control() when navigation is complete
-
-        3. Error Handling:
-           - Verify targets exist in database before navigation
-           - Handle cases where navigation fails
-           - Implement appropriate logging for state transitions
+        Update robot's state based on current conditions and transitions.
+        
+        State machine logic:
+        1. SEARCHING -> NAV_TO_LIGHT:
+        - Transition when database_complete is True
+        
+        2. NAV_TO_LIGHT:
+        - If not navigating (not in_planning) and traffic light in database:
+            * Start navigation to traffic light
+        - Check for transition to STOP state
+        
+        3. STOP:
+        - Track time spent waiting
+        - Transition to NAV_TO_STOP after wait_duration
+        
+        4. NAV_TO_STOP:
+        - If not navigating and stop sign in database:
+            * Start navigation to stop sign
+        - Check for transition to FINISHED state
         """
         ########################
         # TODO: Student fill-in
         ########################
+
         pass
             
             
     def compute_action(self) -> TurtleBotControl:
+
+        control = TurtleBotControl()
+
         """
-        Compute control command based on current state.
-
-        TODO: Implement state-specific control behaviors for the robot.
-
-        Implementation hints:
-        1. Create a new TurtleBotControl message for the command
+        Generate control commands based on current state.
         
-        2. State-specific behaviors:
-           SEARCHING:
-           - Set omega = self.rotation_speed for rotation
-           - Set v = 0.0 to rotate in place
-           
-           STOP/FINISHED:
-           - Set both v and omega to 0.0 to remain stationary
-           
-           Other states:
-           - Navigation is handled by the navigation system
-           - Return zero velocities when not actively controlling
-
-        3. Return Value:
-           - Must return a TurtleBotControl message with appropriate
-             v (linear velocity) and omega (angular velocity) values
+        State-specific behaviors:
+        1. SEARCHING:
+        - Rotate in place (v=0, omega=rotation_speed)
+        2. STOP/FINISHED:
+        - Remain stationary (v=0, omega=0)
+        3. Other states (NAV_TO_LIGHT, NAV_TO_STOP):
+        - Navigation handled by navigation system
+        
+        Returns:
+            TurtleBotControl: Message containing:
+            - v: Linear velocity (m/s)
+            - omega: Angular velocity (rad/s)
         """
+        ########################
+        # TODO: Student fill-in
+        ########################
+
         pass
 
     # =========== End of student implementation below =========== #
