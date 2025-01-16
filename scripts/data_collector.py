@@ -25,7 +25,7 @@ class DataCollector(Node):
         # Create subscribers
         self.image_sub = self.create_subscription(
             Image,
-            '/image',
+            '/image/decompressed',
             self.image_callback,
             5
         )
