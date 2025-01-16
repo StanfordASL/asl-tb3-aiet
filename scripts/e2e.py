@@ -17,6 +17,46 @@ import pickle
 import os
 import torchvision
 
+class MLP(nn.Module):
+    def __init__(self, input_size, hidden_size):
+        super(MLP, self).__init__()
+        self.input_size = input_size
+        self.hidden_size = hidden_size
+        self.dropout_ratio = 0.3                             # Dropout x% of neurons
+        self.hidden_size1 = hidden_size
+        self.hidden_size2 = hidden_size // 2
+
+        # Layer 1
+        self.fc1 = nn.Linear(input_size, self.hidden_size1)
+        self.bn1 = nn.BatchNorm1d(self.hidden_size1)
+        self.dropout1 = nn.Dropout(self.dropout_ratio)
+
+        # Layer 2
+        self.fc2 = nn.Linear(self.hidden_size1, self.hidden_size2)
+        self.bn2 = nn.BatchNorm1d(self.hidden_size2)
+        self.dropout2 = nn.Dropout(self.dropout_ratio)
+
+        # Output layer
+        self.fc3_classification = nn.Linear(self.hidden_size2, 2)  # 2 classes: linear or angular
+        self.fc3_regression = nn.Linear(self.hidden_size2, 1)      # Single scalar for velocity value
+        self.relu = nn.ReLU()
+
+    def forward(self, x):
+        x = self.fc1(x)
+        x = self.bn1(x)
+        x = self.relu(x)
+        x = self.dropout1(x)
+
+        x = self.fc2(x)
+        x = self.bn2(x)
+        x = self.relu(x)
+        x = self.dropout2(x)
+
+        classification_logits = self.fc3_classification(x)
+        regression_output = self.fc3_regression(x)
+
+        return classification_logits, regression_output
+
 class ILController(BaseController):
     def __init__(self):
         super().__init__("il_controller")
