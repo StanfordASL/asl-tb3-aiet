@@ -17,6 +17,12 @@ import pickle
 import os
 import torchvision
 
+######## Copy and paste the definition of your behavior cloning policy here ########
+
+# TODO: Your code here
+
+######################## End of behavior cloning definition #########################
+
 class ILController(BaseController):
     def __init__(self):
         super().__init__("il_controller")
