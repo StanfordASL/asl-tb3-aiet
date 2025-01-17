@@ -6,7 +6,7 @@ import numpy as np
 import rclpy
 from rclpy.node import Node
 from cv_bridge import CvBridge
-from sensor_msgs.msg import Image
+from sensor_msgs.msg import Image, CompressedImage
 from std_msgs.msg import Bool, String
 import cv2
 import os
@@ -27,7 +27,7 @@ COCO_LABELS = [
     'banana', 'apple', 'sandwich', 'orange', 'broccoli', 'carrot', 'hot dog', 'pizza',
     'donut', 'cake', 'chair', 'couch', 'potted plant', 'bed', 'N/A', 'dining table',
     'N/A', 'N/A', 'toilet', 'N/A', 'tv', 'laptop', 'mouse', 'remote', 'keyboard', 'cell phone',
-    'microwave', 'oven', 'toaster', 'sink', 'refrigerator', 'N/A', 'book',
+    'microwave', 'oven', 'toaster', 'sink', 'refrigerator', 'N/A', 'book',message
     'clock', 'vase', 'scissors', 'teddy bear', 'hair drier', 'toothbrush'
 ]
 
@@ -37,7 +37,7 @@ class MobileNetDetector(Node):
         super().__init__("mobilenet_detector")
 
         # Setup ROS Parameters
-        self.declare_parameter("threshold", 0.5)
+        self.declare_parameter("threshold", 0.25)
         self.declare_parameter("target_classes", ["stop sign", "traffic light"])
         self.declare_parameter("republish_img", True)
 
@@ -142,6 +142,16 @@ class MobileNetDetector(Node):
             cv2.putText(img_viz, f"[{int(1e3 * inference_time)} ms]", 
                        (25, 30), font, 0.5, color)
             
+            # # Change: Compress the image before publishing
+            # _, encoded_img = cv2.imencode('.jpg', img_viz, [int(cv2.IMWRITE_JPEG_QUALITY), 90])  # <-- Added compression step
+            # compressed_msg = CompressedImage()  # <-- Use CompressedImage
+            # compressed_msg.header.stamp = self.get_clock().now().to_msg()  # Timestamp
+            # compressed_msg.format = "jpeg"  # JPEG format
+            # compressed_msg.data = encoded_img.tobytes()  # Set the compressed image data
+
+            # # Publish the compressed image
+            # self.highlight_pub.publish(compressed_msg)  # <-- Publish the compressed message
+
             highlight_msg = self.bridge.cv2_to_imgmsg(img_viz, encoding="rgb8")
             self.highlight_pub.publish(highlight_msg)
 

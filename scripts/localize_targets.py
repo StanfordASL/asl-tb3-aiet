@@ -22,7 +22,7 @@ class TargetLocalizer(Node):
         self.imu_sub = self.create_subscription(Imu, '/imu', self.imu_callback, 10)
         self.scan_sub = self.create_subscription(LaserScan, '/scan', self.scan_callback, 10)
         self.state_sub = self.create_subscription(TurtleBotState, '/state', self.state_callback, 10)
-        self.detector_class_sub = self.create_subscription(String, '/detector_class', self.localize_targets_callback, 10)
+        self.detector_class_sub = None
 
         # Publishers
         self.viz_marker_pub = self.create_publisher(Marker, '/marker_visualization', 10)
@@ -52,12 +52,15 @@ class TargetLocalizer(Node):
 
     def imu_callback(self, msg):
         self.imu_data = msg
+        self.start_detect_sub()
 
     def scan_callback(self, msg):
         self.scan_data = msg
+        self.start_detect_sub()
 
     def state_callback(self, msg):
         self.state = msg
+        self.start_detect_sub()
     
     def start_detect_sub(self):
         if self.imu_data != None and self.scan_data != None and self.state != None and self.detector_class_sub == None:

@@ -52,6 +52,6 @@ def generate_launch_description():
             Node(
                 executable="simple_nav.py",
                 package="asl_tb3_aiet",
-            )
+            ),
         ]
     )

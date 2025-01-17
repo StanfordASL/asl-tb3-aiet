@@ -38,12 +38,12 @@ class TaskExecutorBase(BaseController):
         self.in_planning = False
         
         # Additional subscribers beyond BaseController
-        self.nav_success_sub = self.create_subscription(
-            Bool, '/nav_success', self.nav_success_callback, 10)
+        # self.nav_success_sub = self.create_subscription(
+        #     Bool, '/nav_success', self.nav_success_callback, 10)
             
         # Additional publisher beyond BaseController
-        self.cmd_nav_pub = self.create_publisher(
-            TurtleBotState, '/cmd_nav', 10)
+        # self.cmd_nav_pub = self.create_publisher(
+        #     TurtleBotState, '/cmd_nav', 10)
     
     def nav_success_callback(self, msg: Bool):
         """Handle navigation completion"""
