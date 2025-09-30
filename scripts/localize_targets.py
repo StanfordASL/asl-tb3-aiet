@@ -30,7 +30,7 @@ class TargetLocalizer(Node):
 
         # Setup localizer parameters
         # Increasing the cluster_radius and search_fov should allow for more flexibility
-        self.declare_parameter("cluster_radius", 0.3)           # radius to cluster LIDAR data (meters)
+        self.declare_parameter("cluster_radius", 0.2)           # radius to cluster LIDAR data (meters)
         self.declare_parameter("distance_buffer", 0.4)          # offset distance from location to ensure conflict-free (meters)
         self.declare_parameter("search_fov", 35)                # Angle of search for target (deg)
 

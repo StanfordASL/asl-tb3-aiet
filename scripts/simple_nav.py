@@ -31,11 +31,12 @@ class SimpleNav(TaskExecutorBase):
                         "ROBOT_SET_ORIGIN",
                         "ROBOT_SEARCH_TARGET",
                         "ROBOT_NAV_TARGET",
-                        "ROBOT_STANDBY"}
+                        "ROBOT_STANDBY",
+                        "ROBOT_HAPPY"}
 
         # Timestamp variables
         self.timestamp = self.get_time_sec()
-        self.nav_timeout = 10 # Seconds until navigator moves on
+        self.nav_timeout = 5 # Seconds until navigator moves on
 
         # Target variables
         self.new_target_flag = False
@@ -149,7 +150,7 @@ class SimpleNav(TaskExecutorBase):
             self.switch_fsm_state("ROBOT_SEARCH_TARGET")
 
         elif self.fsm_state == "ROBOT_SEARCH_TARGET":
-            self.pub_cmd_vel(0.0, -0.15)
+            self.pub_cmd_vel(0.0, -0.3)  # Changed to 0.3 from 0.15
             if self.new_target_flag:
                 self.new_target_flag = False
                 self.debug_print(f"Target found: {self.current_target_marker.target_type}")
@@ -159,6 +160,7 @@ class SimpleNav(TaskExecutorBase):
                     y = self.current_target_marker.y
                     theta = self.current_target_marker.theta
                     self.pub_nav(x, y, theta)
+                    #self.pub_cmd_vel(0.0, 0.0)  # Changed to 0.3 from 0.15
                     self.timestamp = self.get_time_sec()
                     self.switch_fsm_state("ROBOT_NAV_TARGET")
 
@@ -171,11 +173,29 @@ class SimpleNav(TaskExecutorBase):
                     self.switch_fsm_state("ROBOT_SEARCH_TARGET")
                 # End if current objective target is stop sign
                 elif self.objective_target == "stop sign":
-                    self.switch_fsm_state("ROBOT_STANDBY")
+                    self.switch_fsm_state("ROBOT_HAPPY")
+            elif self.nav_success == False and (self.get_time_sec() - self.timestamp) > self.nav_timeout:
+                time  = self.get_time_sec()
+                while (self.get_time_sec() - time) > 0.5:
+                    self.pub_cmd_vel(0.2, 0.0)
+                    self.nav_success = True
+                self.objective_target = "stop sign"
+                self.debug_print(f"Objective target: {self.objective_target}")
+                #self.switch_fsm_state("ROBOT_SEARCH_TARGET")
+
 
         # Stop
         elif self.fsm_state == "ROBOT_STANDBY":
             self.pub_cmd_vel(0.0, 0.0)
+
+        elif self.fsm_state == "ROBOT_HAPPY":
+            x = self.current_target_marker.x
+            y = self.current_target_marker.y
+            theta = self.current_target_marker.theta
+            self.pub_nav(x, y, 10*np.pi/180)
+            self.pub_nav(x, y, -10*np.pi/180)
+            self.pub_nav(x, y, 10*np.pi/180)
+            
 
     # Main loop
     def main_loop(self) -> None:
