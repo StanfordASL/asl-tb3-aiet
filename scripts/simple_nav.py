@@ -130,6 +130,7 @@ class SimpleNav(TaskExecutorBase):
         """
         # --- YOUR CODE HERE ---
         # TODO: Create /cmd_nav publisher
+        self.cmd_nav_publisher = self.create_publisher(msg_type=TurtleBotState, topic="/cmd_nav", qos_profile=10)
     
         # --- END ---
 
@@ -226,7 +227,7 @@ class SimpleNav(TaskExecutorBase):
         """
         # --- YOUR CODE HERE ---
         # TODO: Publish target_state to your /cmd_nav publisher
-
+        self.cmd_nav_publisher.publish(target_state)
         # --- END ---
 
     def get_time_sec(self):
@@ -285,7 +286,6 @@ class SimpleNav(TaskExecutorBase):
                 # Wait to ensure SLAM and map are ready
                 self.get_clock().sleep_for(rclpy.duration.Duration(seconds=5.0))
                 self.switch_fsm_state("ROBOT_SET_ORIGIN")
-
         elif self.fsm_state == "ROBOT_SET_ORIGIN":
             # Remember origin state
             self.origin_state = self.phys_state
@@ -299,14 +299,12 @@ class SimpleNav(TaskExecutorBase):
             """
             # --- YOUR CODE HERE ---
             # TODO: Navigate 0.5m in the +x direction
-            
+            self.pub_nav(self.phys_state.x + 0.5, self.phys_state.y, self.phys_state.theta)
             # --- END ---
             
             self.switch_fsm_state("ROBOT_NAV_P1")
-
         elif self.fsm_state == "ROBOT_NAV_P1":
             if self.nav_success:
-                
                 """
                 Send navigation command for the TurtleBot to move -0.5 meters in the x-direction and rotate 180 degrees.
                 - x: moves +0.5 meters (i.e., self.phys_state.x - 0.5)
@@ -316,15 +314,13 @@ class SimpleNav(TaskExecutorBase):
                 """
                 # --- YOUR CODE HERE ---
                 # TODO: Navigate 0.5m in the -x direction
-
+                self.pub_nav(self.phys_state.x - 0.5, self.phys_state.y, self.phys_state.theta)
                 # --- END ---
                 
                 self.switch_fsm_state("ROBOT_NAV_ORIGIN")
-
         elif self.fsm_state == "ROBOT_NAV_ORIGIN":
             if self.nav_success:
                self.switch_fsm_state("ROBOT_STANDBY") 
-
         elif self.fsm_state == "ROBOT_STANDBY":
             pass
 
@@ -359,7 +355,7 @@ class SimpleNav(TaskExecutorBase):
         if self.verbose: self.get_logger().info(f"Entered compute_control...")
         control = TurtleBotControl()
         control.v = 0.0
-        control.omega = 0.0            
+        control.omega = 0.0
         return control
 
 def main():

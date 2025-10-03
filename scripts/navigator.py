@@ -217,8 +217,19 @@ class Navigator(BaseNavigator):
         y_d = scipy.interpolate.splev(t, plan.path_y_spline, der=0)
         xd_d = scipy.interpolate.splev(t, plan.path_x_spline, der=1)
         yd_d = scipy.interpolate.splev(t, plan.path_y_spline, der=1)
-        xdd_d = scipy.interpolate.splev(t, plan.path_x_spline, der=2)
-        ydd_d = scipy.interpolate.splev(t, plan.path_y_spline, der=2)
+
+        # Get spline order (k) from spline representation
+        k_x = plan.path_x_spline[2]  # Spline order
+        k_y = plan.path_y_spline[2]
+
+        # Second derivative only available for quadratic (k>=2) or higher splines
+        if k_x >= 2 and k_y >= 2:
+            xdd_d = scipy.interpolate.splev(t, plan.path_x_spline, der=2)
+            ydd_d = scipy.interpolate.splev(t, plan.path_y_spline, der=2)
+        else:
+            # For linear splines, assume zero acceleration
+            xdd_d = 0.0
+            ydd_d = 0.0
 
         # avoid singularity
         if abs(self.v_prev) < self.v_thresh:
@@ -263,8 +274,8 @@ class Navigator(BaseNavigator):
             resolution=resolution,
         )
 
-        # uncessful or path too short for smoothing
-        if problem.solve() == False or len(problem.path) < 4:
+        # unsuccessful path planning
+        if problem.solve() == False:
             self.get_logger().info(f"Problem Path: {problem.path}, Solved Problem: {problem.solve()}")
             return None
 
@@ -278,13 +289,16 @@ class Navigator(BaseNavigator):
         dt[1:] = np.linalg.norm(path[1:] - path[:-1], axis=-1) / self.v_desired
         ts = np.cumsum(dt)
 
+        # Adjust spline order based on path length (cubic requires 4+ points)
+        k = min(3, len(problem.path) - 1)
+
         self.get_logger().info(f"state: {state}")
         self.get_logger().info(f"plan_init: {path[0]}")
 
         return TrajectoryPlan(
             path=path,
-            path_x_spline=scipy.interpolate.splrep(ts, path[:, 0], k=3, s=self.spline_alpha),
-            path_y_spline=scipy.interpolate.splrep(ts, path[:, 1], k=3, s=self.spline_alpha),
+            path_x_spline=scipy.interpolate.splrep(ts, path[:, 0], k=k, s=self.spline_alpha),
+            path_y_spline=scipy.interpolate.splrep(ts, path[:, 1], k=k, s=self.spline_alpha),
             duration=ts[-1],
         )
 
