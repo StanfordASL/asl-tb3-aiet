@@ -265,6 +265,7 @@ class SequentialTaskExecutor(TaskExecutorBase):
         else:
             # Should not happen.
             self.get_logger().error(f"State {self.current_state} is not handled in compute_action()!")
+        return control
 
     def send_nav_command(self, target: Target):
         """
