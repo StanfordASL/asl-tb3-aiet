@@ -10,6 +10,9 @@ from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload, MediaIoBaseDownload
 import json
 
+GMAIL_ACCOUNT = "tps1.aiet@gmail.com"
+BASE_FOLDER = "AIET"
+
 #TODO: Fill in for rest of robots
 """
 Laptop ID -> Robot name pairing. 
@@ -54,7 +57,7 @@ class CVWorkflowManager:
         self.autonomy_dir = Path.home() / "autonomy_ws" / "src" / "asl-tb3-aiet" / "scripts"
         
         # Google Drive paths
-        self.drive_base_path = "AIET/perception"
+        self.drive_base_path = f"{BASE_FOLDER}/perception"
         self.robot_folder = f"robot_{self.robot_id}"
         self.notebook_name = "cv_finetune.ipynb"
 
@@ -120,7 +123,7 @@ class CVWorkflowManager:
         # Check shared drive access
         self.debug_print("\nSearching for shared folder...")
         response = service.files().list(
-            q="name='AIET' and 'tps1.aiet@gmail.com' in owners",
+            q=f"name='{BASE_FOLDER}' and '{GMAIL_ACCOUNT}' in owners",
             spaces='drive',
             fields='files(id, name, owners)',
             supportsAllDrives=True,
@@ -129,7 +132,7 @@ class CVWorkflowManager:
         
         files = response.get('files', [])
         if not files:
-            print("Could not find AIET folder owned by tps1.aiet@gmail.com")
+            print(f"Could not find {BASE_FOLDER} folder owned by {GMAIL_ACCOUNT}")
             print("Please ensure the folder is shared with the service account")
         else:
             self.debug_print(f"Found shared folder: {files[0]['name']}")
@@ -147,7 +150,7 @@ class CVWorkflowManager:
             about = service.about().get(fields="user").execute()
             self.debug_print(f"Authenticated as: {about['user']['emailAddress']}")
             
-            query = f"name='AIET' and mimeType='application/vnd.google-apps.folder'"
+            query = f"name='{BASE_FOLDER}' and mimeType='application/vnd.google-apps.folder'"
             results = service.files().list(
                 q=query,
                 spaces='drive',
@@ -158,10 +161,10 @@ class CVWorkflowManager:
             
             files = results.get('files', [])
             if files:
-                self.debug_print(f"Found AIET folder: {files[0]['id']}")
+                self.debug_print(f"Found {BASE_FOLDER} folder: {files[0]['id']}")
                 return files[0]['id']
             else:
-                self.debug_print("Could not find AIET folder")
+                self.debug_print(f"Could not find {BASE_FOLDER} folder")
                 return None
         except Exception as e:
             self.debug_print(f"Error checking drive access: {str(e)}")
