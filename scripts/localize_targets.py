@@ -33,11 +33,12 @@ class TargetLocalizer(Node):
         self.declare_parameter("cluster_radius", 0.3)           # radius to cluster LIDAR data (meters)
         self.declare_parameter("distance_buffer", 0.4)          # offset distance from location to ensure conflict-free (meters)
         self.declare_parameter("search_fov", 35)                # Angle of search for target (deg)
+        self.declare_parameter("target_classes", ["stop sign", "traffic light"])
 
         # Add marker tracking and timestamp tracking
         self.marker_ids = {
-            "stop sign": 0,
-            "traffic light": 100  # Use different base IDs for different targets
+            self.target_1_name: 0,
+            self.target_2_name: 100  # Use different base IDs for different targets
         }
         self.target_database: Dict[str, Target] = {}
         self.latest_detection_time = None
@@ -74,6 +75,14 @@ class TargetLocalizer(Node):
     @property
     def search_fov(self) -> float:
         return self.get_parameter("search_fov").value
+
+    @property
+    def target_1_name(self) -> str:
+        return self.get_parameter("target_classes").value[0]
+
+    @property
+    def target_2_name(self) -> str:
+        return self.get_parameter("target_classes").value[1]
 
     def localize_targets_callback(self, msg: String):
         current_time = self.get_clock().now().nanoseconds        

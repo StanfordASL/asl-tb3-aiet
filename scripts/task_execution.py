@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from enum import Enum, auto
-from task_base import TaskExecutorBase, Target
+from task_base import TaskExecutorBase, Target, TaskState
 from asl_tb3_msgs.msg import TurtleBotControl, TurtleBotState
 from asl_tb3_aiet.msg import TargetMarker
 from rclpy.parameter import Parameter
@@ -9,16 +9,14 @@ from typing import Dict, Optional
 from std_msgs.msg import Bool
 
 
-TARGET_1_NAME = "traffic light"
-TARGET_2_NAME = "stop sign"
-
-class TaskState(Enum):
-    """States for the sequential navigation task"""
-    SEARCHING = auto()          # Looking for targets
-    NAV_TO_TARGET_1 = auto()    # Moving to target 1
-    STOP = auto()               # Waiting at target 1
-    NAV_TO_TARGET_2 = auto()    # Moving to target 2
-    FINISHED = auto()           # Task completed
+# From task_base.py:
+# class TaskState(Enum):
+#     """States for the sequential navigation task"""
+#     SEARCHING = auto()          # Looking for targets
+#     NAV_TO_TARGET_1 = auto()    # Moving to target 1
+#     STOP = auto()               # Waiting at target 1
+#     NAV_TO_TARGET_2 = auto()    # Moving to target 2
+#     FINISHED = auto()           # Task completed
 
 class SequentialTaskExecutor(TaskExecutorBase):
     def __init__(self):
@@ -33,7 +31,6 @@ class SequentialTaskExecutor(TaskExecutorBase):
         # State management
         self.current_state = TaskState.SEARCHING
         self.target_database: Dict[str, Target] = {}
-        self.required_targets = {TARGET_2_NAME, TARGET_1_NAME}
         self.start_wait_time: Optional[float] = None
         self.current_target = None
         self.nav_success = False
@@ -92,6 +89,14 @@ class SequentialTaskExecutor(TaskExecutorBase):
     def navigation_active(self) -> bool:
         return self.get_parameter("navigation_active").value
 
+    @property
+    def target_1_name(self) -> str:
+        return self.get_parameter("target_classes").value[0]
+
+    @property
+    def target_2_name(self) -> str:
+        return self.get_parameter("target_classes").value[1]
+
     def start_navigation(self, target: Target):
         """Start navigation mode"""
         self.send_nav_command(target)
@@ -125,9 +130,9 @@ class SequentialTaskExecutor(TaskExecutorBase):
         if self.current_state == TaskState.SEARCHING and (next_state == TaskState.NAV_TO_TARGET_1 or next_state == TaskState.NAV_TO_TARGET_2):
             self.current_state = next_state
             if next_state == TaskState.NAV_TO_TARGET_1:
-                self.start_navigation(self.target_database[TARGET_1_NAME])
+                self.start_navigation(self.target_database[self.target_1_name])
             elif next_state == TaskState.NAV_TO_TARGET_2:
-                self.start_navigation(self.target_database[TARGET_2_NAME])
+                self.start_navigation(self.target_database[self.target_2_name])
         elif self.current_state == TaskState.NAV_TO_TARGET_1 and next_state == TaskState.STOP:
             self.start_wait_time = self.get_current_time()
             self.current_state = next_state

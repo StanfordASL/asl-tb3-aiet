@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 from enum import Enum, auto
-from typing import Dict, Optional
+from typing import Dict, Optional, List
 from dataclasses import dataclass
 from asl_tb3_lib.control import BaseController
 from asl_tb3_msgs.msg import TurtleBotControl, TurtleBotState
 from asl_tb3_aiet.msg import TargetMarker
 from std_msgs.msg import Bool
+
 
 @dataclass
 class Target:
@@ -15,24 +16,27 @@ class Target:
     theta: float
     confidence: float
 
+
 class TaskState(Enum):
     """States for the sequential navigation task"""
-    SEARCHING = auto()      # Looking for targets
-    NAV_TO_STOP = auto()    # Moving to stop sign
-    STOP = auto()          # Waiting at stop sign
-    NAV_TO_LIGHT = auto()   # Moving to traffic light
-    FINISHED = auto()       # Task completed
+    SEARCHING = auto()          # Looking for targets
+    NAV_TO_TARGET_1 = auto()    # Moving to target 1
+    STOP = auto()               # Waiting at target 1
+    NAV_TO_TARGET_2 = auto()    # Moving to target 2
+    FINISHED = auto()           # Task completed
+
 
 class TaskExecutorBase(BaseController):
     """Base class for implementing see-think-act cycle"""
     
     def __init__(self, node_name: str):
         super().__init__(node_name)
+
+        self.declare_parameter("target_classes", ["stop sign", "traffic light"])
         
         # State management
         self.current_state = TaskState.SEARCHING
         self.target_database: Dict[str, Target] = {}
-        self.required_targets = {"stop sign", "traffic light"}
         self.start_wait_time: Optional[float] = None
         self.nav_success = False
         self.in_planning = False
@@ -52,6 +56,14 @@ class TaskExecutorBase(BaseController):
             
         self.nav_success = msg.data
     
+    @property
+    def target_classes(self) -> List[str]:
+        return self.get_parameter("target_classes").value
+
+    @property
+    def required_targets(self) -> List[str]:
+        return self.target_classes
+
     @property
     def database_complete(self) -> bool:
         """Check if all required targets are in database"""
