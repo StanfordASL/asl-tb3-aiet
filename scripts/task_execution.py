@@ -74,6 +74,11 @@ class SequentialTaskExecutor(TaskExecutorBase):
             self.get_logger().error("Requested access to property waited_long_enough before start_wait_time was set. Returning False.")
             return False
         return self.get_current_time() - self.start_wait_time >= self.wait_duration
+    
+    @property
+    def navigation_successful(self) -> bool:
+        """Check if navigation was successful."""
+        return self.nav_success
 
     @property
     def active(self) -> bool:
