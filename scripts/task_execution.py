@@ -97,25 +97,32 @@ class SequentialTaskExecutor(TaskExecutorBase):
         self.process_perception(msg)
         # self.get_logger().info(f"Found {msg.target_type}")
     
-    def transition_state(self, next_state):
-        if self.current_state == TaskState.NAV_TO_LIGHT and self.nav_success:
+    def transition_state(self, next_state: TaskState):
+        """Handle the transition from the self.current_state to next_state.
+        
+        Updates self.current_state and starts self.start_wait_time if needed.
+
+        Args:
+            next_state: the state to transition to.
+        """
+        self.get_logger().info(f"Transition from {self.current_state} to {next_state}...")
+        if self.current_state == TaskState.SEARCHING and (next_state == TaskState.NAV_TO_LIGHT or next_state == TaskState.NAV_TO_STOP):
+            self.current_state = next_state
+            if next_state == TaskState.NAV_TO_LIGHT:
+                self.start_navigation(self.target_database["traffic light"])
+            elif next_state == TaskState.NAV_TO_STOP:
+                self.start_navigation(self.target_database["stop sign"])
+        elif self.current_state == TaskState.NAV_TO_LIGHT and next_state == TaskState.STOP:
             self.start_wait_time = self.get_current_time()
             self.current_state = next_state
-            self.get_logger().info(f"Transition from NAV_TO_LIGHT to STOP")
             self.resume_control()
-            
-        elif self.current_state == TaskState.STOP:
-            current_time = self.get_current_time()
-            if self.start_wait_time is not None and current_time - self.start_wait_time >= self.wait_duration:
-                self.current_state = next_state
-                self.get_logger().info(f"Transition from STOP to NAV_TO_STOP")
-                
-        elif self.current_state == TaskState.NAV_TO_STOP and self.nav_success:
+        elif self.current_state == TaskState.STOP and next_state == TaskState.NAV_TO_STOP:
             self.current_state = next_state
-            self.get_logger().info("Task complete!")
-            self.resume_control()
-
-        self.get_logger().info(f"DEBUG: My current state is {self.current_state}")
+        elif self.current_state == TaskState.NAV_TO_STOP and next_state == TaskState.FINISHED:
+            self.current_state = next_state
+            self.get_logger().info("SUCCESS! Task completed!")
+        else:
+            self.get_logger().warn(f"Transition from {self.current_state} to {next_state} not supported. Skipping transition.")
     
     # =========== End of Helper Functions =========== #
 
@@ -204,9 +211,22 @@ class SequentialTaskExecutor(TaskExecutorBase):
         ########################
         # TODO: Student fill-in
         ########################
-
-        pass
-            
+        # Replace all TODO in the code and remove this line afterwards.
+        TODO = False
+        if self.current_state == TaskState.SEARCHING and TODO:
+            self.transition_state(TODO)
+        elif self.current_state == TaskState.NAV_TO_LIGHT and TODO:
+            self.transition_state(TODO)
+        elif self.current_state == TaskState.STOP and TODO:
+            self.transition_state(TODO)
+        elif self.current_state == TaskState.NAV_TO_STOP and TODO:
+            self.transition_state(TODO)
+        elif self.current_state == TaskState.FINISHED:
+            # Print a fun little message if you want.
+            self.get_logger().info(TODO)
+        else:
+            # We are still waiting for the last state to finish.
+            pass
             
     def compute_action(self) -> TurtleBotControl:
 
