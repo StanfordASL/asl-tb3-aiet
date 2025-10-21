@@ -8,13 +8,17 @@ import rclpy
 from typing import Dict, Optional
 from std_msgs.msg import Bool
 
+
+TARGET_1_NAME = "traffic light"
+TARGET_2_NAME = "stop sign"
+
 class TaskState(Enum):
     """States for the sequential navigation task"""
-    SEARCHING = auto()      # Looking for targets
-    NAV_TO_STOP = auto()    # Moving to stop sign
-    STOP = auto()          # Waiting at stop sign
-    NAV_TO_LIGHT = auto()   # Moving to traffic light
-    FINISHED = auto()       # Task completed
+    SEARCHING = auto()          # Looking for targets
+    NAV_TO_TARGET_1 = auto()    # Moving to target 1
+    STOP = auto()               # Waiting at target 1
+    NAV_TO_TARGET_2 = auto()    # Moving to target 2
+    FINISHED = auto()           # Task completed
 
 class SequentialTaskExecutor(TaskExecutorBase):
     def __init__(self):
@@ -29,7 +33,7 @@ class SequentialTaskExecutor(TaskExecutorBase):
         # State management
         self.current_state = TaskState.SEARCHING
         self.target_database: Dict[str, Target] = {}
-        self.required_targets = {"stop sign", "traffic light"}
+        self.required_targets = {TARGET_2_NAME, TARGET_1_NAME}
         self.start_wait_time: Optional[float] = None
         self.current_target = None
         self.nav_success = False
@@ -118,19 +122,19 @@ class SequentialTaskExecutor(TaskExecutorBase):
             next_state: the state to transition to.
         """
         self.get_logger().info(f"Transition from {self.current_state} to {next_state}...")
-        if self.current_state == TaskState.SEARCHING and (next_state == TaskState.NAV_TO_LIGHT or next_state == TaskState.NAV_TO_STOP):
+        if self.current_state == TaskState.SEARCHING and (next_state == TaskState.NAV_TO_TARGET_1 or next_state == TaskState.NAV_TO_TARGET_2):
             self.current_state = next_state
-            if next_state == TaskState.NAV_TO_LIGHT:
-                self.start_navigation(self.target_database["traffic light"])
-            elif next_state == TaskState.NAV_TO_STOP:
-                self.start_navigation(self.target_database["stop sign"])
-        elif self.current_state == TaskState.NAV_TO_LIGHT and next_state == TaskState.STOP:
+            if next_state == TaskState.NAV_TO_TARGET_1:
+                self.start_navigation(self.target_database[TARGET_1_NAME])
+            elif next_state == TaskState.NAV_TO_TARGET_2:
+                self.start_navigation(self.target_database[TARGET_2_NAME])
+        elif self.current_state == TaskState.NAV_TO_TARGET_1 and next_state == TaskState.STOP:
             self.start_wait_time = self.get_current_time()
             self.current_state = next_state
             self.resume_control()
-        elif self.current_state == TaskState.STOP and next_state == TaskState.NAV_TO_STOP:
+        elif self.current_state == TaskState.STOP and next_state == TaskState.NAV_TO_TARGET_2:
             self.current_state = next_state
-        elif self.current_state == TaskState.NAV_TO_STOP and next_state == TaskState.FINISHED:
+        elif self.current_state == TaskState.NAV_TO_TARGET_2 and next_state == TaskState.FINISHED:
             self.current_state = next_state
             self.get_logger().info("SUCCESS! Task completed!")
         else:
@@ -147,11 +151,15 @@ class SequentialTaskExecutor(TaskExecutorBase):
         This function is called whenever a new target is detected via target_callback.
         It should:
         1. Check if the detected target is new (not in database)
+            Tip: Investigate the database_complete() function for how we can check if an element is in the database. 
         2. If new, create a Target object with the target's:
         - x, y position
         - theta (orientation)
         - confidence
+            Tip: the target class is defined in scripts/task_base.py.
         3. Add the new Target object to target_database with target_type as key
+            Tip: target_database is a dictionary. 
+            Learn more: https://www.geeksforgeeks.org/python/python-dictionary/
         """
         self.current_target = target_msg
         ########################
@@ -165,7 +173,7 @@ class SequentialTaskExecutor(TaskExecutorBase):
         Main control loop implementing the sense-think-act paradigm.
         
         This function should:
-        1. SENSE: Target detection is handled by target_callback
+        1. SENSE: Target detection is handled by target_callback. Nothing to do here.
         2. THINK: Call decision_update() to process state transitions
         3. ACT: Return compute_action() to generate control commands
         
@@ -184,19 +192,19 @@ class SequentialTaskExecutor(TaskExecutorBase):
         Update robot's state based on current conditions and transitions.
         
         State machine logic:
-        1. SEARCHING -> NAV_TO_LIGHT:
+        1. SEARCHING -> NAV_TO_TARGET_1:
         - Transition when database_complete is True
         
-        2. NAV_TO_LIGHT:
+        2. NAV_TO_TARGET_1:
         - If not navigating (not in_planning) and traffic light in database:
             * Start navigation to traffic light
         - Check for transition to STOP state
         
         3. STOP:
         - Track time spent waiting
-        - Transition to NAV_TO_STOP after wait_duration
+        - Transition to NAV_TO_TARGET_2 after wait_duration
         
-        4. NAV_TO_STOP:
+        4. NAV_TO_TARGET_2:
         - If not navigating and stop sign in database:
             * Start navigation to stop sign
         - Check for transition to FINISHED state
@@ -208,11 +216,11 @@ class SequentialTaskExecutor(TaskExecutorBase):
         TODO = False
         if self.current_state == TaskState.SEARCHING and TODO:
             self.transition_state(TODO)
-        elif self.current_state == TaskState.NAV_TO_LIGHT and TODO:
+        elif self.current_state == TaskState.NAV_TO_TARGET_1 and TODO:
             self.transition_state(TODO)
         elif self.current_state == TaskState.STOP and TODO:
             self.transition_state(TODO)
-        elif self.current_state == TaskState.NAV_TO_STOP and TODO:
+        elif self.current_state == TaskState.NAV_TO_TARGET_2 and TODO:
             self.transition_state(TODO)
         elif self.current_state == TaskState.FINISHED:
             # Print a fun little message if you want.
@@ -233,7 +241,7 @@ class SequentialTaskExecutor(TaskExecutorBase):
         - Rotate in place (v=0, omega=rotation_speed)
         2. STOP/FINISHED:
         - Remain stationary (v=0, omega=0)
-        3. Other states (NAV_TO_LIGHT, NAV_TO_STOP):
+        3. Other states (NAV_TO_TARGET_1, NAV_TO_TARGET_2):
         - Navigation handled by navigation system
         
         Returns:
@@ -247,7 +255,7 @@ class SequentialTaskExecutor(TaskExecutorBase):
         TODO = False
         if self.current_state == TaskState.SEARCHING:
             TODO
-        elif self.current_state == TaskState.NAV_TO_LIGHT or self.current_state == TaskState.NAV_TO_STOP:
+        elif self.current_state == TaskState.NAV_TO_TARGET_1 or self.current_state == TaskState.NAV_TO_TARGET_2:
             # This is handled by the navigation module.
             pass
         elif self.current_state == TaskState.STOP:
