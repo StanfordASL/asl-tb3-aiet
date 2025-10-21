@@ -140,18 +140,16 @@ class SequentialTaskExecutor(TaskExecutorBase):
             next_state: the state to transition to.
         """
         self.get_logger().info(f"Transition from {self.current_state} to {next_state}...")
-        if self.current_state == TaskState.SEARCHING and (next_state == TaskState.NAV_TO_TARGET_1 or next_state == TaskState.NAV_TO_TARGET_2):
+        if self.current_state == TaskState.SEARCHING and next_state == TaskState.NAV_TO_TARGET_1:
             self.current_state = next_state
-            if next_state == TaskState.NAV_TO_TARGET_1:
-                self.start_navigation(self.target_database[self.target_1_name])
-            elif next_state == TaskState.NAV_TO_TARGET_2:
-                self.start_navigation(self.target_database[self.target_2_name])
+            self.start_navigation(self.target_database[self.target_1_name])
         elif self.current_state == TaskState.NAV_TO_TARGET_1 and next_state == TaskState.STOP:
             self.start_wait_time = self.get_current_time()
             self.current_state = next_state
             self.resume_control()
         elif self.current_state == TaskState.STOP and next_state == TaskState.NAV_TO_TARGET_2:
             self.current_state = next_state
+            self.start_navigation(self.target_database[self.target_2_name])
         elif self.current_state == TaskState.NAV_TO_TARGET_2 and next_state == TaskState.FINISHED:
             self.current_state = next_state
             self.get_logger().info("SUCCESS! Task completed!")
