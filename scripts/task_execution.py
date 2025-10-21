@@ -18,6 +18,19 @@ from std_msgs.msg import Bool
 #     NAV_TO_TARGET_2 = auto()    # Moving to target 2
 #     FINISHED = auto()           # Task completed
 
+## From msg/TargetMarker.msg:
+# # Target type (e.g., "stop sign" or "traffic light")
+# string target_type
+# 
+# # Position in map frame
+# float64 x
+# float64 y
+# float64 theta
+# 
+# # Confidence in detection/localization
+# float64 confidence
+
+
 class SequentialTaskExecutor(TaskExecutorBase):
     def __init__(self):
         super().__init__("sequential_task_executor")
@@ -166,7 +179,6 @@ class SequentialTaskExecutor(TaskExecutorBase):
             Tip: target_database is a dictionary. 
             Learn more: https://www.geeksforgeeks.org/python/python-dictionary/
         """
-        self.current_target = target_msg
         ########################
         # TODO: Student fill-in
         ########################
