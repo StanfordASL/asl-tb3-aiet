@@ -263,8 +263,19 @@ class SequentialTaskExecutor(TaskExecutorBase):
         ########################
         # TODO: Student fill-in
         ########################
-
-        pass
+        TODO = False
+        if self.current_state == TaskState.SEARCHING:
+            TODO
+        elif self.current_state == TaskState.NAV_TO_LIGHT or self.current_state == TaskState.NAV_TO_STOP:
+            # This is handled by the navigation module.
+            pass
+        elif self.current_state == TaskState.STOP:
+            TODO
+        elif self.current_state == TaskState.FINISHED:
+            TODO
+        else:
+            # Should not happen.
+            self.get_logger().error(f"State {self.current_state} is not handled in compute_action()!")
 
     # =========== End of student implementation below =========== #
 
