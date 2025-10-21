@@ -68,6 +68,14 @@ class SequentialTaskExecutor(TaskExecutorBase):
                   for target in self.required_targets)
 
     @property
+    def waited_long_enough(self) -> bool:
+        """Check if the robot waited long enough at the stop sign."""
+        if self.start_wait_time is None:
+            self.get_logger().error("Requested access to property waited_long_enough before start_wait_time was set. Returning False.")
+            return False
+        return self.get_current_time() - self.start_wait_time >= self.wait_duration
+
+    @property
     def active(self) -> bool:
         return self.get_parameter("active").value
     
