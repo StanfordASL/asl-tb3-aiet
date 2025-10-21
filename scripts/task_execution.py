@@ -94,8 +94,7 @@ class SequentialTaskExecutor(TaskExecutorBase):
         return self.get_clock().now().nanoseconds / 1e9
     
     def target_callback(self, msg: TargetMarker):
-        self.current_target = msg
-        self.process_perception()
+        self.process_perception(msg)
         # self.get_logger().info(f"Found {msg.target_type}")
     
     def transition_state(self, next_state):
@@ -141,7 +140,7 @@ class SequentialTaskExecutor(TaskExecutorBase):
         ########################
         pass
 
-    def process_perception(self):
+    def process_perception(self, target_msg: TargetMarker):
         """
         Process newly detected targets and add them to the database.
         
@@ -154,6 +153,7 @@ class SequentialTaskExecutor(TaskExecutorBase):
         - confidence
         3. Add the new Target object to target_database with target_type as key
         """
+        self.current_target = target_msg
         ########################
         # TODO: Student fill-in
         ########################
