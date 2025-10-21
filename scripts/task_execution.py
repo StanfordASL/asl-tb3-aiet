@@ -140,25 +140,6 @@ class SequentialTaskExecutor(TaskExecutorBase):
 
     # =========== Start of student implementation below =========== #
 
-    def send_nav_command(self, target: Target):
-        """
-        Send navigation command to move robot to target location.
-        
-        Args:
-            target (Target): Target object containing:
-                - x, y: Target position coordinates
-                - theta: Target orientation
-        
-        Steps:
-        1. Create TurtleBotState message
-        2. Set goal position (x, y) and orientation (theta)
-        3. Publish command to navigation system via cmd_nav_pub
-        """
-        ########################
-        # TODO: Student fill-in
-        ########################
-        pass
-
     def process_perception(self, target_msg: TargetMarker):
         """
         Process newly detected targets and add them to the database.
@@ -276,6 +257,25 @@ class SequentialTaskExecutor(TaskExecutorBase):
         else:
             # Should not happen.
             self.get_logger().error(f"State {self.current_state} is not handled in compute_action()!")
+
+    def send_nav_command(self, target: Target):
+        """
+        Send navigation command to move robot to target location.
+        
+        Args:
+            target (Target): Target object containing:
+                - x, y: Target position coordinates
+                - theta: Target orientation
+        
+        Steps:
+        1. Create TurtleBotState message
+        2. Set goal position (x, y) and orientation (theta)
+        3. Publish command to navigation system via cmd_nav_pub
+        """
+        ########################
+        # TODO: Student fill-in
+        ########################
+        pass
 
     # =========== End of student implementation below =========== #
 
