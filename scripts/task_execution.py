@@ -51,8 +51,7 @@ class SequentialTaskExecutor(TaskExecutorBase):
         Hint:
         - Create subscriber to listen for target detections
         """
-        self.target_sub = self.create_subscription(
-            TargetMarker, '/target_marker', self.target_callback, 10)
+        
     
     # =========== Start of Helper Functions =========== #
     def nav_success_callback(self, msg: Bool):
