@@ -45,7 +45,7 @@ class TargetLocalizer(Node):
         self.latest_detection_id = None
         self.processing_delay = 2.0  # 100ms delay to ensure we get fresh laser data
         self.last_detection_time = -np.inf
-        self.prev_target_id = None
+        self.prev_target_name = None
 
         self.imu_data = None
         self.scan_data = None
@@ -89,13 +89,17 @@ class TargetLocalizer(Node):
 
         elapsed_time = current_time - self.last_detection_time
         # Extract Target ID from detector
-        target_id = msg.data
+        target_name = msg.data
 
-        if self.prev_target_id is None:
-            self.prev_target_id = target_id
-        elif self.prev_target_id != target_id and elapsed_time <= self.processing_delay:
+        if not self.scan_data:
+            self.get_logger().info(f"Found target {target_name}, but no scan_data was received on topic /scan.")
+            return False
+
+        if self.prev_target_name is None:
+            self.prev_target_name = target_name
+        elif self.prev_target_name != target_name and elapsed_time <= self.processing_delay:
             self.get_logger().info("Skipping outdated detection.")
-            self.prev_target_id = None
+            self.prev_target_name = None
             return False
 
         # Extract yaw from IMU data
@@ -217,7 +221,7 @@ class TargetLocalizer(Node):
             # self.get_logger().info(f"Centroid angle: {math.degrees(centroid_angle)} degrees")
 
             # Publish the centroid to /cmd_nav
-            target_msg = self.publish_target(target_id, centroid, centroid_angle)
+            target_msg = self.publish_target(target_name, centroid, centroid_angle)
 
             # Publish visualization markers
             if target_msg.target_type not in self.target_database:
@@ -227,7 +231,7 @@ class TargetLocalizer(Node):
                     theta=target_msg.theta,
                     confidence=target_msg.confidence
                 )
-                self.publish_viz_markers(target_id, bounding_box, centroid)
+                self.publish_viz_markers(target_name, bounding_box, centroid)
         else:
             self.get_logger().info("Not enough points to compute convex hull.")
         
@@ -284,8 +288,8 @@ class TargetLocalizer(Node):
 
         return rectangle
 
-    def publish_viz_markers(self, target_id, bounding_box, centroid):
-        base_id = self.marker_ids.get(target_id, 0)
+    def publish_viz_markers(self, target_name, bounding_box, centroid):
+        base_id = self.marker_ids.get(target_name, 0)
 
         # Create a Marker for the bounding box
         box_marker = Marker()
@@ -319,7 +323,7 @@ class TargetLocalizer(Node):
         centroid_marker.header.frame_id = "map"  # Use appropriate frame
         centroid_marker.header.stamp = self.get_clock().now().to_msg()
         centroid_marker.ns = "centroid"
-        centroid_marker.text = target_id
+        centroid_marker.text = target_name
         centroid_marker.id = base_id + 1
         centroid_marker.type = Marker.SPHERE
         centroid_marker.action = Marker.ADD
@@ -342,14 +346,14 @@ class TargetLocalizer(Node):
         text_marker = Marker()
         text_marker.header.frame_id = "map"
         text_marker.header.stamp = self.get_clock().now().to_msg()
-        text_marker.ns = f"{target_id}_text"
+        text_marker.ns = f"{target_name}_text"
         text_marker.id = base_id + 2
         text_marker.type = Marker.TEXT_VIEW_FACING
         text_marker.action = Marker.ADD
         text_marker.pose.position.x = centroid[0]
         text_marker.pose.position.y = centroid[1]
         text_marker.pose.position.z = 0.3  # Place text above centroid
-        text_marker.text = target_id
+        text_marker.text = target_name
         text_marker.scale.z = 0.2  # Text height
         text_marker.color.r = 1.0
         text_marker.color.g = 1.0
@@ -360,9 +364,9 @@ class TargetLocalizer(Node):
         # Publish the text marker
         self.viz_marker_pub.publish(text_marker)
     
-    def publish_target(self, target_id, centroid, centroid_angle):
+    def publish_target(self, target_name, centroid, centroid_angle):
         centroid_msg = TargetMarker()
-        centroid_msg.target_type = target_id
+        centroid_msg.target_type = target_name
         centroid_msg.x = float(centroid[0])
         centroid_msg.y = float(centroid[1])
         centroid_msg.theta = centroid_angle  # Set to appropriate orientation if known
