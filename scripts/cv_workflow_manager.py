@@ -10,7 +10,7 @@ from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload, MediaIoBaseDownload
 import json
 
-GMAIL_ACCOUNT = "tps1.aiet@gmail.com"
+GMAIL_ACCOUNT = "thumm@stanford.edu"
 BASE_FOLDER = "AIET"
 
 #TODO: Fill in for rest of robots
@@ -37,16 +37,18 @@ ROBOT_IDs = {
 }
 
 class CVWorkflowManager:
-    def __init__(self, robot_id=None, verbose=False):
+    def __init__(self, robot_name=None, verbose=False):
         self.verbose = verbose
-        if robot_id is None:
+        if robot_name is None:
             laptop_id = os.environ.get('LAPTOP_ID')
             if laptop_id is None:
                 raise ValueError("robot_id not specified and LAPTOP_ID environment variable not found")
             robot_id = laptop_id.split('-')[-1]
 
-        self.robot_id = robot_id.zfill(2)
-        self.robot_name = ROBOT_IDs[self.robot_id]
+            robot_id = robot_id.zfill(2)
+            self.robot_name = ROBOT_IDs[robot_id]
+        else:
+            self.robot_name = robot_name
         self.checkpoint_name = "finetuned_ssd_model"
 
         # Set up paths
@@ -58,7 +60,7 @@ class CVWorkflowManager:
         
         # Google Drive paths
         self.drive_base_path = f"{BASE_FOLDER}/perception"
-        self.robot_folder = f"robot_{self.robot_id}"
+        self.robot_folder = f"robot_{self.robot_name}"
         self.notebook_name = "cv_finetune.ipynb"
 
         # Login details
@@ -68,7 +70,7 @@ class CVWorkflowManager:
         self.remote_path = f'/home/aa274/section_assets/{self.checkpoint_name}.pkl'
 
         self.debug_print("\nConfiguration:")
-        self.debug_print(f"Robot ID: {self.robot_id}")
+        self.debug_print(f"Robot name: {self.robot_name}")
         self.debug_print(f"Base path: {self.drive_base_path}")
         self.debug_print(f"Robot folder: {self.robot_folder}")
         self.debug_print(f"Looking for notebook: {self.notebook_name}")
@@ -303,7 +305,7 @@ class CVWorkflowManager:
     def run_workflow(self):
         """Execute the complete workflow"""
         try:
-            print(f"Starting CV workflow for Robot {self.robot_id}")
+            print(f"Starting CV workflow for Robot {self.robot_name}")
 
             # print("1. Preprocessing data...")
             # self.preprocess_data()
@@ -349,7 +351,7 @@ class CVWorkflowManager:
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Manage CV training workflow")
-    parser.add_argument('--robot-id', type=str, help='Robot ID (e.g., 01, 02)', 
+    parser.add_argument('--robot-name', type=str, help='Robot Name (e.g., orwell)', 
                        default=None)
     parser.add_argument('--verbose', '-v', action='store_true',
                        help='Enable verbose debug output')

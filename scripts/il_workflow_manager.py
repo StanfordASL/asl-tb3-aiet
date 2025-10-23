@@ -10,17 +10,21 @@ from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload, MediaIoBaseDownload
 import json
 from preprocess_data import ILPreProcessManager
+from cv_workflow_manager import ROBOT_IDs
 
 class ILWorkflowManager:
-    def __init__(self, robot_id=None, verbose=False):
+    def __init__(self, robot_name=None, verbose=False):
         self.verbose = verbose
-        if robot_id is None:
+        if robot_name is None:
             laptop_id = os.environ.get('LAPTOP_ID')
             if laptop_id is None:
                 raise ValueError("robot_id not specified and LAPTOP_ID environment variable not found")
             robot_id = laptop_id.split('-')[-1]
 
-        self.robot_id = robot_id.zfill(2)
+            robot_id = robot_id.zfill(2)
+            self.robot_name = ROBOT_IDs[robot_id]
+        else:
+            self.robot_name = robot_name
         self.checkpoint_name = "IL_model_checkpoint"
 
         # Set up paths
@@ -35,11 +39,11 @@ class ILWorkflowManager:
         
         # Google Drive paths
         self.drive_base_path = "AIET/imitation_learning"
-        self.robot_folder = f"robot_{self.robot_id}"
+        self.robot_folder = f"robot_{self.robot_name}"
         self.notebook_name = "IL_training.ipynb"
 
         self.debug_print("\nConfiguration:")
-        self.debug_print(f"Robot ID: {self.robot_id}")
+        self.debug_print(f"Robot name: {self.robot_name}")
         self.debug_print(f"Base path: {self.drive_base_path}")
         self.debug_print(f"Robot folder: {self.robot_folder}")
         self.debug_print(f"Looking for notebook: {self.notebook_name}")
@@ -291,7 +295,7 @@ class ILWorkflowManager:
     def run_workflow(self):
         """Execute the complete workflow"""
         try:
-            print(f"Starting workflow for Robot {self.robot_id}")
+            print(f"Starting workflow for Robot {self.robot_name}")
             
             print("1. Preprocessing data...")
             self.preprocess_data()
@@ -330,11 +334,11 @@ class ILWorkflowManager:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Manage IL training workflow")
-    parser.add_argument('--robot-id', type=str, help='Robot ID (e.g., 01, 02)', 
+    parser.add_argument('--robot-name', type=str, help='Robot Name (e.g., orwell)', 
                        default=None)
     parser.add_argument('--verbose', '-v', action='store_true',
                        help='Enable verbose debug output')
     args = parser.parse_args()
     
-    manager = ILWorkflowManager(robot_id=args.robot_id, verbose=args.verbose)
+    manager = ILWorkflowManager(robot_name=args.robot_name, verbose=args.verbose)
     manager.run_workflow()
