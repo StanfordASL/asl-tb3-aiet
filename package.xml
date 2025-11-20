@@ -3,9 +3,9 @@
 <package format="3">
   <name>asl_tb3_aiet</name>
   <version>0.0.0</version>
-  <description>TODO: Package description</description>
-  <maintainer email="jjalora@stanford.edu">john</maintainer>
-  <license>TODO: License declaration</license>
+  <description>ROS2 package for the Stanford TPS course.</description>
+  <maintainer email="thumm@stanford.edu">thumm</maintainer>
+  <license>MIT License</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
