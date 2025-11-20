@@ -26,6 +26,7 @@ def generate_launch_description():
                         ]
                     ),
                     "use_sim_time": use_sim_time,
+                    "log_level": "warn",
                 }.items(),
             ),
 
@@ -39,6 +40,7 @@ def generate_launch_description():
             Node(
                 executable="localize_targets.py",
                 package="asl_tb3_aiet",
+                parameters=[{"target_classes": ["person", "airplane"]}]
             ),
 
             # navigatior node - listening on /cmd_nav
@@ -52,6 +54,7 @@ def generate_launch_description():
             Node(
                 executable="task_execution.py",
                 package="asl_tb3_aiet",
+                parameters=[{"target_classes": ["person", "airplane"]}]
             )
         ]
     )
