@@ -19,7 +19,129 @@ import torchvision
 
 ######## Copy and paste the definition of your behavior cloning policy here ########
 
-# TODO: Your code here
+# Combined Loss Function
+def combined_loss(classification_predict, classification_targets, regression_predict, regression_targets):
+    """
+    # --- IMPLEMENT COMBINED LOSS FUNCTION ---
+    # TODO: Create a loss function that combines classification and regression losses
+    #
+    # This function needs to:
+    # 1. Calculate classification loss (for predicting velocity type)
+    #
+    # 2. Calculate regression loss (for predicting velocity)
+    #
+    # 3. Combine the losses (think: how should they be weighted?)
+    #
+    # Args:
+    #    classification_predict: Raw model outputs for velocity class prediction
+    #    classification_targets: True velocity class labels
+    #    regression_predict: Predicted velocity values
+    #    regression_targets: True velocity values
+    #
+    # Hints:
+    # - Check input dimensions match loss function expectations
+    # - Consider if both losses should be weighted equally
+    # - Define regression and loss functions using the functions in https://pytorch.org/docs/stable/nn.html#loss-functions
+    """
+    # 1. Calculate classification loss (using Cross-Entropy Loss)
+    classification_loss_fn = nn.CrossEntropyLoss()
+    classification_loss = classification_loss_fn(classification_predict, classification_targets)
+
+    # 2. Calculate regression loss (using Mean Squared Error)
+    regression_loss_fn = nn.MSELoss()
+    # Ensure regression_predict and regression_targets have the same shape
+    regression_targets = regression_targets.view_as(regression_predict)
+    regression_loss = regression_loss_fn(regression_predict, regression_targets)
+
+    # 3. Combine the losses (simple sum - you can adjust weights if needed)
+    combined_loss = classification_loss + regression_loss
+
+    return combined_loss
+
+
+class MLP(nn.Module):
+    def __init__(self, input_size, hidden_size):
+        super(MLP, self).__init__()
+        self.input_size = input_size
+        self.hidden_size = hidden_size
+        self.dropout_ratio = 0.5  # Example dropout ratio
+
+        """
+        Initialize the MLP model.
+
+        Args:
+        - input_size (int): Size of the input feature vector.
+        - hidden_size (int): Number of neurons in the first hidden layer.
+        - Note: You can add more hidden layers as required by adding more 'hidden_size' arguments in __init__.
+
+        TODO:
+        - Define fully connected layers (`nn.Linear`).
+        - Define non-linearity for activation for activation (see: https://pytorch.org/docs/stable/nn.html#non-linear-activations-weighted-sum-nonlinearity).
+
+        Hint:
+        - For layer dimensions, follow these:
+          * Input to hidden layer 1: `input_size -> hidden_size_1`
+          * Hidden layer 1 to hidden layer 2: `hidden_size_1 -> hidden_size_2`
+          * Final outputs:
+            - Classification layer: `hidden_size_2 -> 2` (2 classes)
+            - Regression layer: `hidden_size // 2 -> 1` (velocity value)
+          * Use batch normalization (i.e., nn.BatchNorm1d(self.hidden_size)) and weight dropout (i.e., nn.Dropout(self.dropout_ratio)) to stabilize training.
+        """
+        self.fc1 = nn.Linear(input_size, hidden_size)
+        self.bn1 = nn.BatchNorm1d(hidden_size)
+        self.dropout1 = nn.Dropout(self.dropout_ratio)
+
+        # Example: Adding a second hidden layer
+        self.fc2 = nn.Linear(hidden_size, hidden_size // 2)
+        self.bn2 = nn.BatchNorm1d(hidden_size // 2)
+        self.dropout2 = nn.Dropout(self.dropout_ratio)
+
+
+        # Output layers
+        self.classification_output = nn.Linear(hidden_size // 2, 2)  # 2 classes: linear, angular
+        self.regression_output = nn.Linear(hidden_size // 2, 1)     # 1 output: velocity value
+
+
+    def forward(self, x):
+        """
+        Forward pass of the MLP.
+
+        Args:
+        - x (Tensor): Input tensor of shape (batch_size, input_size).
+
+        Returns:
+        - classification_logits (Tensor): Logits for classification task, i.e., linear or angular velocity (batch_size, 2).
+        - regression_output (Tensor): Scalar values for regression task, i.e., velocity value (batch_size, 1).
+
+        TODO:
+        - Pass the input `x` through the layers defined in `__init__`.
+        - Apply ReLU activation and dropout after each layer (except the output layers).
+        - Separate the output into two branches:
+          * One for classification logits
+          * One for regression output
+
+        Hint:
+        - Use the layers and activations in the following order:
+          * Input -> Layer 1 -> ReLU
+          * Layer 1 -> Layer 2 -> ReLU
+          * Layer 2 -> Separate into classification and regression branches
+          * If using batch norm, place it between layer and non-linear activation
+          * If using dropout, place it after activation.
+        """
+        x = self.fc1(x)
+        x = self.bn1(x)
+        x = torch.relu(x)
+        x = self.dropout1(x)
+
+        x = self.fc2(x)
+        x = self.bn2(x)
+        x = torch.relu(x)
+        x = self.dropout2(x)
+
+        classification_logits = self.classification_output(x)
+        regression_output = self.regression_output(x)
+
+        return classification_logits, regression_output
 
 ######################## End of behavior cloning definition #########################
 
