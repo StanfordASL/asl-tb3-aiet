@@ -65,7 +65,8 @@ class SequentialTaskExecutor(TaskExecutorBase):
         Hint:
         - Create subscriber to listen for target detections
         """
-        
+        self.target_sub = self.create_subscription(
+            TargetMarker, '/target_marker', self.target_callback, 10)
     
     # =========== Start of Helper Functions =========== #
     def nav_success_callback(self, msg: Bool):
@@ -180,8 +181,10 @@ class SequentialTaskExecutor(TaskExecutorBase):
         ########################
         # TODO: Student fill-in
         ########################
-
-        pass
+        if not target_msg.target_type in self.target_database:
+            new_target = Target(x=target_msg.x, y=target_msg.y, theta=target_msg.theta, confidence=target_msg.confidence)
+            self.target_database[target_msg.target_type] = new_target
+            self.get_logger().info(f"Added target {target_msg.target_type} with position {target_msg.x}, {target_msg.y} in the database.")
 
     def compute_control(self) -> TurtleBotControl:
         """
@@ -199,8 +202,8 @@ class SequentialTaskExecutor(TaskExecutorBase):
         # TODO: Student fill-in
         ########################
         # NOTE: See component is handled asynchronously whenever target is detected via target_callback
-
-        pass
+        self.decision_update()
+        return self.compute_action()
 
     def decision_update(self):
         """
@@ -229,17 +232,17 @@ class SequentialTaskExecutor(TaskExecutorBase):
         ########################
         # Replace all TODO in the code and remove this line afterwards.
         TODO = False
-        if self.current_state == TaskState.SEARCHING and TODO:
-            self.transition_state(TODO)
-        elif self.current_state == TaskState.NAV_TO_TARGET_1 and TODO:
-            self.transition_state(TODO)
-        elif self.current_state == TaskState.STOP and TODO:
-            self.transition_state(TODO)
-        elif self.current_state == TaskState.NAV_TO_TARGET_2 and TODO:
-            self.transition_state(TODO)
+        if self.current_state == TaskState.SEARCHING and self.database_complete:
+            self.transition_state(TaskState.NAV_TO_TARGET_1)
+        elif self.current_state == TaskState.NAV_TO_TARGET_1 and self.navigation_successful:
+            self.transition_state(TaskState.STOP)
+        elif self.current_state == TaskState.STOP and self.waited_long_enough:
+            self.transition_state(TaskState.NAV_TO_TARGET_2)
+        elif self.current_state == TaskState.NAV_TO_TARGET_2 and self.navigation_successful:
+            self.transition_state(TaskState.FINISHED)
         elif self.current_state == TaskState.FINISHED:
             # Print a fun little message if you want.
-            self.get_logger().info(TODO)
+            self.get_logger().info("Success.")
         else:
             # We are still waiting for the last state to finish.
             pass
@@ -269,14 +272,17 @@ class SequentialTaskExecutor(TaskExecutorBase):
         ########################
         TODO = False
         if self.current_state == TaskState.SEARCHING:
-            TODO
+            control.v = 0.0
+            control.omega = -0.2
         elif self.current_state == TaskState.NAV_TO_TARGET_1 or self.current_state == TaskState.NAV_TO_TARGET_2:
             # This is handled by the navigation module.
             pass
         elif self.current_state == TaskState.STOP:
-            TODO
+            control.v = 0.0
+            control.omega = 0.0
         elif self.current_state == TaskState.FINISHED:
-            TODO
+            control.v = 0.0
+            control.omega = 0.0
         else:
             # Should not happen.
             self.get_logger().error(f"State {self.current_state} is not handled in compute_action()!")
@@ -299,7 +305,11 @@ class SequentialTaskExecutor(TaskExecutorBase):
         ########################
         # TODO: Student fill-in
         ########################
-        pass
+        turtle_bot_state_msg = TurtleBotState()
+        turtle_bot_state_msg.x = target.x
+        turtle_bot_state_msg.y = target.y
+        turtle_bot_state_msg.theta = target.theta
+        self.cmd_nav_pub.publish(turtle_bot_state_msg)
 
     # =========== End of student implementation below =========== #
 
