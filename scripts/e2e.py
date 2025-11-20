@@ -187,7 +187,7 @@ class ILController(BaseController):
         # Create image subscriber
         self.image_sub = self.create_subscription(
             Image,
-            '/image/decompressed', ################################## @JOHN -- SWITCH TO /image/decompressed --- ROHAN
+            '/image/decompressed',
             self.image_callback,
             10
         )
