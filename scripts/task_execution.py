@@ -60,13 +60,28 @@ class SequentialTaskExecutor(TaskExecutorBase):
         # Create additional class properties
         self.target_sub = self.create_subscription(
             TargetMarker, '/target_marker', self.target_callback, 10)
+
+        # Statistics tracking
+        self.execution_start_time = self.get_current_time()
+        self.stats = {
+            'state_times': {TaskState.SEARCHING: self.get_current_time()},
+            'detected_objects': set(),
+            'navigated_objects': set(),
+            'final_status': 'FAILURE',
+            'time_to_completion': None
+        }
         
     # =========== Start of Helper Functions =========== #
     def nav_success_callback(self, msg: Bool):
         """Handle navigation completion"""
         if msg.data:
             self.control_timer.reset()
-            
+            # Track successful navigation
+            if self.current_state == TaskState.NAV_TO_TARGET_1:
+                self.stats['navigated_objects'].add(self.target_1_name)
+            elif self.current_state == TaskState.NAV_TO_TARGET_2:
+                self.stats['navigated_objects'].add(self.target_2_name)
+
         self.nav_success = msg.data
     
     @property
@@ -126,12 +141,15 @@ class SequentialTaskExecutor(TaskExecutorBase):
     
     def transition_state(self, next_state: TaskState):
         """Handle the transition from the self.current_state to next_state.
-        
+
         Updates self.current_state and starts self.start_wait_time if needed.
 
         Args:
             next_state: the state to transition to.
         """
+        # Track state transition timing
+        self.stats['state_times'][next_state] = self.get_current_time()
+
         self.get_logger().info(f"Transition from {self.current_state} to {next_state}...")
         if self.current_state == TaskState.SEARCHING and next_state == TaskState.NAV_TO_TARGET_1:
             self.current_state = next_state
@@ -145,6 +163,8 @@ class SequentialTaskExecutor(TaskExecutorBase):
             self.start_navigation(self.target_database[self.target_2_name])
         elif self.current_state == TaskState.NAV_TO_TARGET_2 and next_state == TaskState.FINISHED:
             self.current_state = next_state
+            self.stats['final_status'] = 'SUCCESS'
+            self.stats['time_to_completion'] = self.get_current_time() - self.execution_start_time
             self.get_logger().info("SUCCESS! Task completed!")
         else:
             self.get_logger().warn(f"Transition from {self.current_state} to {next_state} not supported. Skipping transition.")
@@ -169,6 +189,7 @@ class SequentialTaskExecutor(TaskExecutorBase):
         if target_msg.target_type not in self.target_database:
             new_target = Target(x=target_msg.x, y=target_msg.y, theta=target_msg.theta, confidence=target_msg.confidence)
             self.target_database[target_msg.target_type] = new_target
+            self.stats['detected_objects'].add(target_msg.target_type)
             self.get_logger().info(f"Added target {target_msg.target_type} with position {target_msg.x}, {target_msg.y} in the database.")
 
     def compute_control(self) -> TurtleBotControl:
@@ -205,6 +226,54 @@ class SequentialTaskExecutor(TaskExecutorBase):
         turtle_bot_state_msg.y = target.y
         turtle_bot_state_msg.theta = target.theta
         self.cmd_nav_pub.publish(turtle_bot_state_msg)
+
+    def print_stats(self):
+        """Print execution statistics including timing, detections, and navigation success."""
+        current_time = self.get_current_time()
+        total_execution_time = current_time - self.execution_start_time
+
+        self.get_logger().info("=" * 60)
+        self.get_logger().info("EXECUTION STATISTICS")
+        self.get_logger().info("=" * 60)
+        self.get_logger().info(f"Final Status: {self.stats['final_status']}")
+
+        # Display time to completion if task finished successfully
+        if self.stats['time_to_completion'] is not None:
+            self.get_logger().info(f"Time to Completion: {self.stats['time_to_completion']:.2f} seconds")
+
+        self.get_logger().info(f"Total Execution Time: {total_execution_time:.2f} seconds")
+        self.get_logger().info("")
+
+        # Objects detected
+        self.get_logger().info("Detected Objects:")
+        if self.stats['detected_objects']:
+            for obj in sorted(self.stats['detected_objects']):
+                self.get_logger().info(f"  - {obj}")
+        else:
+            self.get_logger().info("  None")
+        self.get_logger().info("")
+
+        # Navigation successes
+        self.get_logger().info("Successfully Navigated To:")
+        if self.stats['navigated_objects']:
+            for obj in sorted(self.stats['navigated_objects']):
+                self.get_logger().info(f"  - {obj}")
+        else:
+            self.get_logger().info("  None")
+        self.get_logger().info("")
+
+        # Time spent in each stage (durations)
+        self.get_logger().info("Time Spent in Each Stage:")
+        state_list = list(self.stats['state_times'].keys())
+        for i, state in enumerate(state_list):
+            state_start_time = self.stats['state_times'][state]
+            if i + 1 < len(state_list):
+                state_end_time = self.stats['state_times'][state_list[i + 1]]
+            else:
+                state_end_time = current_time
+            duration = state_end_time - state_start_time
+            self.get_logger().info(f"  {state.name}: {duration:.2f} seconds")
+        self.get_logger().info("=" * 60)
 
     # =========== End of Helper Functions =========== #
 
@@ -295,8 +364,14 @@ class SequentialTaskExecutor(TaskExecutorBase):
 def main():
     rclpy.init()
     node = SequentialTaskExecutor()
-    rclpy.spin(node)
-    rclpy.shutdown()
+    try:
+        rclpy.spin(node)
+    except KeyboardInterrupt:
+        node.get_logger().info("Execution interrupted by user (Ctrl+C)")
+    finally:
+        # Print statistics before shutdown
+        node.print_stats()
+        rclpy.shutdown()
 
 if __name__ == "__main__":
     main()
