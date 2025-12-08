@@ -58,15 +58,9 @@ class SequentialTaskExecutor(TaskExecutorBase):
             TurtleBotState, '/cmd_nav', 10)
         
         # Create additional class properties
-        """
-        Initialize perception system and target tracking.
-        TODO: Set up target subscriber and data storage.
-
-        Hint:
-        - Create subscriber to listen for target detections
-        """
+        self.target_sub = self.create_subscription(
+            TargetMarker, '/target_marker', self.target_callback, 10)
         
-    
     # =========== Start of Helper Functions =========== #
     def nav_success_callback(self, msg: Bool):
         """Handle navigation completion"""
@@ -78,8 +72,7 @@ class SequentialTaskExecutor(TaskExecutorBase):
     @property
     def database_complete(self) -> bool:
         """Check if all required targets are in database"""
-        return all(target in self.target_database 
-                  for target in self.required_targets)
+        return all(target in self.target_database for target in self.required_targets)
 
     @property
     def waited_long_enough(self) -> bool:
@@ -155,10 +148,6 @@ class SequentialTaskExecutor(TaskExecutorBase):
             self.get_logger().info("SUCCESS! Task completed!")
         else:
             self.get_logger().warn(f"Transition from {self.current_state} to {next_state} not supported. Skipping transition.")
-    
-    # =========== End of Helper Functions =========== #
-
-    # =========== Start of student implementation below =========== #
 
     def process_perception(self, target_msg: TargetMarker):
         """
@@ -177,11 +166,10 @@ class SequentialTaskExecutor(TaskExecutorBase):
             Tip: target_database is a dictionary. 
             Learn more: https://www.geeksforgeeks.org/python/python-dictionary/
         """
-        ########################
-        # TODO: Student fill-in
-        ########################
-
-        pass
+        if target_msg.target_type not in self.target_database:
+            new_target = Target(x=target_msg.x, y=target_msg.y, theta=target_msg.theta, confidence=target_msg.confidence)
+            self.target_database[target_msg.target_type] = new_target
+            self.get_logger().info(f"Added target {target_msg.target_type} with position {target_msg.x}, {target_msg.y} in the database.")
 
     def compute_control(self) -> TurtleBotControl:
         """
@@ -195,13 +183,32 @@ class SequentialTaskExecutor(TaskExecutorBase):
         Returns:
             TurtleBotControl: Control command with appropriate v and omega values
         """
-        ########################
-        # TODO: Student fill-in
-        ########################
-        # NOTE: See component is handled asynchronously whenever target is detected via target_callback
+        self.decision_update()
+        return self.compute_action()
+ 
+    def send_nav_command(self, target: Target):
+        """
+        Send navigation command to move robot to target location.
+        
+        Args:
+            target (Target): Target object containing:
+                - x, y: Target position coordinates
+                - theta: Target orientation
+        
+        Steps:
+        1. Create TurtleBotState message
+        2. Set goal position (x, y) and orientation (theta)
+        3. Publish command to navigation system via cmd_nav_pub
+        """
+        turtle_bot_state_msg = TurtleBotState()
+        turtle_bot_state_msg.x = target.x
+        turtle_bot_state_msg.y = target.y
+        turtle_bot_state_msg.theta = target.theta
+        self.cmd_nav_pub.publish(turtle_bot_state_msg)
 
-        pass
+    # =========== End of Helper Functions =========== #
 
+    # =========== Start of student implementation below =========== #
     def decision_update(self):
         """
         Update robot's state based on current conditions and transitions.
@@ -281,25 +288,6 @@ class SequentialTaskExecutor(TaskExecutorBase):
             # Should not happen.
             self.get_logger().error(f"State {self.current_state} is not handled in compute_action()!")
         return control
-
-    def send_nav_command(self, target: Target):
-        """
-        Send navigation command to move robot to target location.
-        
-        Args:
-            target (Target): Target object containing:
-                - x, y: Target position coordinates
-                - theta: Target orientation
-        
-        Steps:
-        1. Create TurtleBotState message
-        2. Set goal position (x, y) and orientation (theta)
-        3. Publish command to navigation system via cmd_nav_pub
-        """
-        ########################
-        # TODO: Student fill-in
-        ########################
-        pass
 
     # =========== End of student implementation below =========== #
 
