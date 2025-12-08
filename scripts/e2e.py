@@ -22,9 +22,6 @@ import torchvision
 # Combined Loss Function
 def combined_loss(classification_predict, classification_targets, regression_predict, regression_targets):
     """
-    # --- IMPLEMENT COMBINED LOSS FUNCTION ---
-    # TODO: Create a loss function that combines classification and regression losses
-    #
     # This function needs to:
     # 1. Calculate classification loss (for predicting velocity type)
     #
@@ -74,7 +71,6 @@ class MLP(nn.Module):
         - hidden_size (int): Number of neurons in the first hidden layer.
         - Note: You can add more hidden layers as required by adding more 'hidden_size' arguments in __init__.
 
-        TODO:
         - Define fully connected layers (`nn.Linear`).
         - Define non-linearity for activation for activation (see: https://pytorch.org/docs/stable/nn.html#non-linear-activations-weighted-sum-nonlinearity).
 
@@ -101,7 +97,6 @@ class MLP(nn.Module):
         self.classification_output = nn.Linear(hidden_size // 2, 2)  # 2 classes: linear, angular
         self.regression_output = nn.Linear(hidden_size // 2, 1)     # 1 output: velocity value
 
-
     def forward(self, x):
         """
         Forward pass of the MLP.
@@ -113,7 +108,6 @@ class MLP(nn.Module):
         - classification_logits (Tensor): Logits for classification task, i.e., linear or angular velocity (batch_size, 2).
         - regression_output (Tensor): Scalar values for regression task, i.e., velocity value (batch_size, 1).
 
-        TODO:
         - Pass the input `x` through the layers defined in `__init__`.
         - Apply ReLU activation and dropout after each layer (except the output layers).
         - Separate the output into two branches:
@@ -144,6 +138,7 @@ class MLP(nn.Module):
         return classification_logits, regression_output
 
 ######################## End of behavior cloning definition #########################
+
 
 class ILController(BaseController):
     def __init__(self):
@@ -205,6 +200,24 @@ class ILController(BaseController):
         self.last_control.omega = 0.0
         self.control_counter = 0
 
+        # Statistics tracking
+        self.execution_start_time = self.get_current_time()
+
+    def get_current_time(self):
+        """Get current system time in seconds"""
+        return self.get_clock().now().nanoseconds / 1e9
+
+    def print_stats(self):
+        """Print execution statistics including total execution time."""
+        current_time = self.get_current_time()
+        total_execution_time = current_time - self.execution_start_time
+
+        self.get_logger().info("=" * 60)
+        self.get_logger().info("EXECUTION STATISTICS")
+        self.get_logger().info("=" * 60)
+        self.get_logger().info(f"Total Execution Time: {total_execution_time:.2f} seconds")
+        self.get_logger().info("=" * 60)
+
     def image_callback(self, msg):
         try:
             self.latest_image = self.bridge.imgmsg_to_cv2(msg, "bgr8")
@@ -213,11 +226,11 @@ class ILController(BaseController):
 
     def compute_control(self) -> TurtleBotControl:
         # Only compute new control every 10 calls (1 Hz since base is 10 Hz)
-        self.control_counter += 1
-        if self.control_counter < 10:
-            return self.last_control
-        
-        self.control_counter = 0
+        # self.control_counter += 1
+        # if self.control_counter < 10:
+        #     return self.last_control
+        # 
+        # self.control_counter = 0
 
         if self.latest_image is None:
             self.get_logger().warn('No image received yet')
@@ -260,8 +273,14 @@ class ILController(BaseController):
 def main(args=None):
     rclpy.init(args=args)
     controller = ILController()
-    rclpy.spin(controller)
-    rclpy.shutdown()
+    try:
+        rclpy.spin(controller)
+    except KeyboardInterrupt:
+        controller.get_logger().info("Execution interrupted by user (Ctrl+C)")
+    finally:
+        # Print statistics before shutdown
+        controller.print_stats()
+        rclpy.shutdown()
 
 if __name__ == '__main__':
     main()
