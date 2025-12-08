@@ -26,6 +26,7 @@ install(PROGRAMS
     scripts/task_execution.py
     scripts/e2e.py
     scripts/simple_nav.py
+    scripts/velocity_battery_test.py
     DESTINATION lib/${PROJECT_NAME}
 )
 
