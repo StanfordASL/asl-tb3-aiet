@@ -107,7 +107,7 @@ class VelocityBatteryTest(Node):
 
         self.csv_writer.writerow(
             [
-                now.to_msg().sec_nanosec(),
+                now.nanoseconds,
                 self.cmd_vel_msg.linear.x,
                 self.cmd_vel_msg.angular.z,
                 self.measured_vel.linear.x,
@@ -125,8 +125,7 @@ class VelocityBatteryTest(Node):
     def cleanup_and_shutdown(self):
         if self.logfile:
             self.logfile.close()
-        self.destroy_node()
-        rclpy.shutdown()
+        raise SystemExit
 
 
 def main(args=None):
@@ -134,10 +133,13 @@ def main(args=None):
     node = VelocityBatteryTest()
     try:
         rclpy.spin(node)
-    except KeyboardInterrupt:
+    except (KeyboardInterrupt, SystemExit):
         pass
-    if rclpy.ok():
-        node.cleanup_and_shutdown()
+    finally:
+        if node.logfile:
+            node.logfile.close()
+        node.destroy_node()
+        rclpy.shutdown()
 
 
 if __name__ == "__main__":
