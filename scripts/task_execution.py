@@ -287,8 +287,8 @@ class SequentialTaskExecutor(TaskExecutorBase):
         - Transition when database_complete is True
         
         2. NAV_TO_TARGET_1:
-        - If not navigating (not in_planning) and airplane in database:
-            * Start navigation to airplane
+        - If not navigating (not in_planning) and person in database:
+            * Start navigation to person
         - Check for transition to STOP state
         
         3. STOP:
@@ -296,8 +296,8 @@ class SequentialTaskExecutor(TaskExecutorBase):
         - Transition to NAV_TO_TARGET_2 after wait_duration
         
         4. NAV_TO_TARGET_2:
-        - If not navigating and person in database:
-            * Start navigation to person
+        - If not navigating and airplane in database:
+            * Start navigation to airplane
         - Check for transition to FINISHED state
         """
         ########################
