@@ -83,24 +83,6 @@ class SequentialTaskExecutor(TaskExecutorBase):
                 self.stats['navigated_objects'].add(self.target_2_name)
 
         self.nav_success = msg.data
-    
-    @property
-    def database_complete(self) -> bool:
-        """Check if all required targets are in database"""
-        return all(target in self.target_database for target in self.required_targets)
-
-    @property
-    def waited_long_enough(self) -> bool:
-        """Check if the robot waited long enough at the person."""
-        if self.start_wait_time is None:
-            self.get_logger().error("Requested access to property waited_long_enough before start_wait_time was set. Returning False.")
-            return False
-        return self.get_current_time() - self.start_wait_time >= self.wait_duration
-    
-    @property
-    def navigation_successful(self) -> bool:
-        """Check if navigation was successful."""
-        return self.nav_success
 
     @property
     def active(self) -> bool:
@@ -274,6 +256,25 @@ class SequentialTaskExecutor(TaskExecutorBase):
             duration = state_end_time - state_start_time
             self.get_logger().info(f"  {state.name}: {duration:.2f} seconds")
         self.get_logger().info("=" * 60)
+
+    # TODO: You will have to use these three properties in the code below.
+    @property
+    def database_complete(self) -> bool:
+        """Check if all required targets are in database"""
+        return all(target in self.target_database for target in self.required_targets)
+
+    @property
+    def waited_long_enough(self) -> bool:
+        """Check if the robot waited long enough at the person."""
+        if self.start_wait_time is None:
+            self.get_logger().error("Requested access to property waited_long_enough before start_wait_time was set. Returning False.")
+            return False
+        return self.get_current_time() - self.start_wait_time >= self.wait_duration
+
+    @property
+    def navigation_successful(self) -> bool:
+        """Check if navigation was successful."""
+        return self.nav_success
 
     # =========== End of Helper Functions =========== #
 
