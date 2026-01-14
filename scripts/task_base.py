@@ -32,7 +32,7 @@ class TaskExecutorBase(BaseController):
     def __init__(self, node_name: str):
         super().__init__(node_name)
 
-        self.declare_parameter("target_classes", ["stop sign", "traffic light"])
+        self.declare_parameter("target_classes", ["stop sign", "airplane"])
         
         # State management
         self.current_state = TaskState.SEARCHING

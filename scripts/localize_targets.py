@@ -33,7 +33,7 @@ class TargetLocalizer(Node):
         self.declare_parameter("cluster_radius", 0.3)           # radius to cluster LIDAR data (meters)
         self.declare_parameter("distance_buffer", 0.4)          # offset distance from location to ensure conflict-free (meters)
         self.declare_parameter("search_fov", 35)                # Angle of search for target (deg)
-        self.declare_parameter("target_classes", ["stop sign", "traffic light"])
+        self.declare_parameter("target_classes", ["person", "airplane"])
 
         # Add marker tracking and timestamp tracking
         self.marker_ids = {

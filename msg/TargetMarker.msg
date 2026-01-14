@@ -1,4 +1,4 @@
-# Target type (e.g., "stop sign" or "traffic light")
+# Target type (e.g., "person" or "airplane")
 string target_type
 
 # Position in map frame

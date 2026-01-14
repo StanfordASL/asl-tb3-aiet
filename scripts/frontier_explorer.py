@@ -29,7 +29,7 @@ class FrontierExplorer(Node):
         self.exploring = True
         self.finished_exploring = False
         
-        # stop sign detection
+        # person detection
         self.image_sub = self.create_subscription(Bool, '/detector_bool', self.stop_sign_callback, 10)
         self.stop_time = 5.0
         self.buffer_time = 3.0
@@ -96,7 +96,7 @@ class FrontierExplorer(Node):
         
     def stop_sign_callback(self, msg: Bool):
         if msg.data and self.image_time is None:
-            self.get_logger().info("Detected stop sign!")
+            self.get_logger().info("Detected person!")
             self.exploring = False
             self.image_time = self.get_clock().now().nanoseconds / 1e9
             self.nav_pub.publish(self.state)

@@ -19,7 +19,7 @@ from std_msgs.msg import Bool
 #     FINISHED = auto()           # Task completed
 
 ## From msg/TargetMarker.msg:
-# # Target type (e.g., "stop sign" or "traffic light")
+# # Target type (e.g., "person" or "airplane")
 # string target_type
 # 
 # # Position in map frame
@@ -91,7 +91,7 @@ class SequentialTaskExecutor(TaskExecutorBase):
 
     @property
     def waited_long_enough(self) -> bool:
-        """Check if the robot waited long enough at the stop sign."""
+        """Check if the robot waited long enough at the person."""
         if self.start_wait_time is None:
             self.get_logger().error("Requested access to property waited_long_enough before start_wait_time was set. Returning False.")
             return False
@@ -287,8 +287,8 @@ class SequentialTaskExecutor(TaskExecutorBase):
         - Transition when database_complete is True
         
         2. NAV_TO_TARGET_1:
-        - If not navigating (not in_planning) and traffic light in database:
-            * Start navigation to traffic light
+        - If not navigating (not in_planning) and airplane in database:
+            * Start navigation to airplane
         - Check for transition to STOP state
         
         3. STOP:
@@ -296,8 +296,8 @@ class SequentialTaskExecutor(TaskExecutorBase):
         - Transition to NAV_TO_TARGET_2 after wait_duration
         
         4. NAV_TO_TARGET_2:
-        - If not navigating and stop sign in database:
-            * Start navigation to stop sign
+        - If not navigating and person in database:
+            * Start navigation to person
         - Check for transition to FINISHED state
         """
         ########################
