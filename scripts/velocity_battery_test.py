@@ -17,9 +17,11 @@ class VelocityBatteryTest(Node):
         # Parameters
         # ---------------------------
         self.declare_parameter("cmd_vel", 0.5)
+        self.declare_parameter("cmd_vel_ang", 0.0)
         self.declare_parameter("cmd_time", 3.0)
 
         self.cmd_vel_value = float(self.get_parameter("cmd_vel").value)
+        self.cmd_vel_ang_value = float(self.get_parameter("cmd_vel_ang").value)
         self.cmd_time_value = float(self.get_parameter("cmd_time").value)
 
         self.get_logger().info(f"Starting test with cmd_vel={self.cmd_vel_value}, cmd_time={self.cmd_time_value}")
@@ -93,12 +95,14 @@ class VelocityBatteryTest(Node):
         #   then stop
         if t < self.cmd_time_value:
             self.cmd_vel_msg.linear.x = self.cmd_vel_value
+            self.cmd_vel_msg.angular.z = self.cmd_vel_ang_value
         elif t < 2 * self.cmd_time_value:
             self.cmd_vel_msg.linear.x = -self.cmd_vel_value
+            self.cmd_vel_msg.angular.z = -self.cmd_vel_ang_value
         else:
             self.cmd_vel_msg.linear.x = 0.0
 
-        self.cmd_vel_msg.angular.z = 0.0
+        # self.cmd_vel_msg.angular.z = 0.0
         self.cmd_pub.publish(self.cmd_vel_msg)
 
         # Don't log until everything is available
@@ -133,13 +137,10 @@ def main(args=None):
     node = VelocityBatteryTest()
     try:
         rclpy.spin(node)
-    except (KeyboardInterrupt, SystemExit):
+    except KeyboardInterrupt:
         pass
-    finally:
-        if node.logfile:
-            node.logfile.close()
-        node.destroy_node()
-        rclpy.shutdown()
+    if rclpy.ok():
+        node.cleanup_and_shutdown()
 
 
 if __name__ == "__main__":
