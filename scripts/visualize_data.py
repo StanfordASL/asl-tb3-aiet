@@ -30,39 +30,60 @@ cmap = plt.cm.get_cmap("tab10", len(iterations))
 # =========================
 plt.figure(figsize=(8, 8))
 
-for i, it in enumerate(iterations):
+# Build complete trajectory: initial -> forward_end(1) -> backward_end(1) -> forward_end(2) -> ...
+trajectory_x = []
+trajectory_y = []
+segment_types = []  # 'forward' or 'backward' for coloring arrows
+
+# Start with ground truth (iteration 0, initial)
+init_row = df[(df["iteration"] == 0) & (df["phase"] == "initial")]
+if not init_row.empty:
+    trajectory_x.append(init_row["pos_x"].iloc[0])
+    trajectory_y.append(init_row["pos_y"].iloc[0])
+
+# Add forward_end and backward_end for each iteration (starting from iteration 1)
+for it in sorted(df["iteration"].unique()):
+    if it == 0:
+        continue
     it_df = df[df["iteration"] == it]
 
-    if len(it_df) < 2:
-        continue
+    fwd = it_df[it_df["phase"] == "forward_end"]
+    if not fwd.empty:
+        trajectory_x.append(fwd["pos_x"].iloc[0])
+        trajectory_y.append(fwd["pos_y"].iloc[0])
+        segment_types.append("forward")
 
-    x = it_df["pos_x"].values
-    y = it_df["pos_y"].values
+    bwd = it_df[it_df["phase"] == "backward_end"]
+    if not bwd.empty:
+        trajectory_x.append(bwd["pos_x"].iloc[0])
+        trajectory_y.append(bwd["pos_y"].iloc[0])
+        segment_types.append("backward")
 
-    color = cmap(i)
+trajectory_x = np.array(trajectory_x)
+trajectory_y = np.array(trajectory_y)
 
-    # Plot trajectory line
-    plt.plot(x, y, "-o", color=color, label=f"Iteration {it}")
+# Plot the full trajectory line
+plt.plot(trajectory_x, trajectory_y, "-o", color="blue", alpha=0.5, label="Trajectory")
 
-    # Add arrows to show direction
-    for j in range(len(x) - 1):
-        dx = x[j + 1] - x[j]
-        dy = y[j + 1] - y[j]
-        plt.arrow(
-            x[j],
-            y[j],
-            dx,
-            dy,
-            length_includes_head=True,
-            head_width=0.02,
-            head_length=0.03,
-            fc=color,
-            ec=color,
-            alpha=0.8,
-        )
+# Add arrows with different colors for forward (green) and backward (orange)
+for j in range(len(trajectory_x) - 1):
+    dx = trajectory_x[j + 1] - trajectory_x[j]
+    dy = trajectory_y[j + 1] - trajectory_y[j]
+    color = "green" if segment_types[j] == "forward" else "orange"
+    plt.arrow(
+        trajectory_x[j],
+        trajectory_y[j],
+        dx,
+        dy,
+        length_includes_head=True,
+        head_width=0.02,
+        head_length=0.03,
+        fc=color,
+        ec=color,
+        alpha=0.8,
+    )
 
-# Mark the initial ground-truth position (iteration 0, phase initial)
-init_row = df[(df["iteration"] == 0) & (df["phase"] == "initial")]
+# Mark the initial ground-truth position
 if not init_row.empty:
     plt.plot(
         init_row["pos_x"].iloc[0],
@@ -70,8 +91,13 @@ if not init_row.empty:
         marker="*",
         color="red",
         markersize=15,
-        label="Initial Position",
+        zorder=5,
+        label="Ground Truth (Initial)",
     )
+
+# Add legend entries for arrow colors
+plt.plot([], [], color="green", label="Forward")
+plt.plot([], [], color="orange", label="Backward")
 
 plt.xlabel("X Position (m)")
 plt.ylabel("Y Position (m)")
@@ -104,8 +130,8 @@ for i, it in enumerate(iterations):
     fwd = it_df[it_df["phase"] == "forward_end"]
     if not fwd.empty:
         plt.plot(
-            fwd["pos_x"],
-            fwd["pos_y"],
+            fwd["pos_x"].values,
+            fwd["pos_y"].values,
             marker="o",
             linestyle="None",
             color=color,
@@ -123,8 +149,8 @@ for i, it in enumerate(iterations):
     bwd = it_df[it_df["phase"] == "backward_end"]
     if not bwd.empty:
         plt.plot(
-            bwd["pos_x"],
-            bwd["pos_y"],
+            bwd["pos_x"].values,
+            bwd["pos_y"].values,
             marker="s",
             linestyle="None",
             color=color,
