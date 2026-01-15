@@ -7,7 +7,7 @@ from rclpy.parameter import Parameter
 import rclpy
 from typing import Dict, Optional
 from std_msgs.msg import Bool
-
+import time
 
 # From task_base.py:
 # class TaskState(Enum):
@@ -61,6 +61,7 @@ class SequentialTaskExecutor(TaskExecutorBase):
         self.target_sub = self.create_subscription(
             TargetMarker, '/target_marker', self.target_callback, 10)
 
+        time.sleep(3)
         # Statistics tracking
         self.execution_start_time = self.get_current_time()
         self.stats = {
@@ -305,24 +306,24 @@ class SequentialTaskExecutor(TaskExecutorBase):
         ########################
         # Replace all TODO in the code and remove this line afterwards.
         TODO = False
-        if self.current_state == TaskState.SEARCHING and TODO:
-            self.transition_state(TODO)
-        elif self.current_state == TaskState.NAV_TO_TARGET_1 and TODO:
-            self.transition_state(TODO)
-        elif self.current_state == TaskState.STOP and TODO:
-            self.transition_state(TODO)
-        elif self.current_state == TaskState.NAV_TO_TARGET_2 and TODO:
-            self.transition_state(TODO)
+        self.get_logger().info(f"Database: {self.target_database.keys()}, complete: {self.database_complete}")
+        if self.current_state == TaskState.SEARCHING and self.database_complete:
+            self.transition_state(TaskState.NAV_TO_TARGET_1)
+        elif self.current_state == TaskState.NAV_TO_TARGET_1 and self.nav_success:
+            self.transition_state(TaskState.STOP)
+        elif self.current_state == TaskState.STOP and self.waited_long_enough:
+            self.transition_state(TaskState.NAV_TO_TARGET_2)
+        elif self.current_state == TaskState.NAV_TO_TARGET_2 and self.navigation_successful:
+            self.transition_state(TaskState.FINISHED)
         elif self.current_state == TaskState.FINISHED:
             # Print a fun little message if you want.
-            self.get_logger().info(TODO)
+            self.get_logger().info("we win")
         else:
             # We are still waiting for the last state to finish.
             pass
             
     def compute_action(self) -> TurtleBotControl:
 
-        control = TurtleBotControl()
 
         """
         Generate control commands based on current state.
@@ -340,19 +341,22 @@ class SequentialTaskExecutor(TaskExecutorBase):
             - v: Linear velocity (m/s)
             - omega: Angular velocity (rad/s)
         """
+        control = TurtleBotControl()
         ########################
-        # TODO: Student fill-in
+        # TODO: Student fill-in below
         ########################
-        TODO = False
         if self.current_state == TaskState.SEARCHING:
-            TODO
+            control.v = 0.0
+            control.omega = 0.4
         elif self.current_state == TaskState.NAV_TO_TARGET_1 or self.current_state == TaskState.NAV_TO_TARGET_2:
             # This is handled by the navigation module.
             pass
         elif self.current_state == TaskState.STOP:
-            TODO
+            control.v = 0.0
+            control.omega = 0.0
         elif self.current_state == TaskState.FINISHED:
-            TODO
+            control.v = 0.0
+            control.omega = 0.0
         else:
             # Should not happen.
             self.get_logger().error(f"State {self.current_state} is not handled in compute_action()!")
