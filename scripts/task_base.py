@@ -67,8 +67,7 @@ class TaskExecutorBase(BaseController):
     @property
     def database_complete(self) -> bool:
         """Check if all required targets are in database"""
-        return all(target in self.target_database 
-                  for target in self.required_targets)
+        return all(target in self.target_database for target in self.required_targets)
     
     def clear_database(self):
         """Clear the target database"""
