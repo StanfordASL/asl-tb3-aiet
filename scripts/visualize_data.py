@@ -1,11 +1,16 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
+import glob
+import os
 
 # =========================
-# Path to CSV file (EDIT ME)
+# Path to CSV file (EDIT ME) - for single file plots
 # =========================
 CSV_PATH = "/home/aa274/asl_tb3_aiet/results/drift_test_vel_0.5_ang_-0.3_t_3.0_iter_3.csv"
+
+# Directory containing all result files - for multi-file analysis
+RESULTS_DIR = "/home/aa274/asl_tb3_aiet/results/"
 
 # =========================
 # Load data
@@ -170,5 +175,80 @@ plt.title("Robot Position at End of Each Phase")
 plt.legend()
 plt.axis("equal")
 plt.grid(True)
+
+# =========================
+# Figure 3: cmd_wz vs Total Drift (from all files)
+# =========================
+
+# Collect data from all CSV files
+csv_files = glob.glob(os.path.join(RESULTS_DIR, "drift_test_*.csv"))
+
+cmd_wz_values = []
+total_drift_xy = []
+total_drift_yaw = []
+drift_x_values = []
+drift_y_values = []
+
+for csv_file in csv_files:
+    file_df = pd.read_csv(csv_file)
+
+    # Get the final backward_end row (last iteration)
+    max_iter = file_df["iteration"].max()
+    final_row = file_df[(file_df["iteration"] == max_iter) & (file_df["phase"] == "backward_end")]
+
+    if final_row.empty:
+        continue
+
+    # Get cmd_wz from any forward_end row (they should all be the same for a file)
+    fwd_rows = file_df[file_df["phase"] == "forward_end"]
+    if fwd_rows.empty:
+        continue
+
+    cmd_wz = fwd_rows["cmd_wz"].iloc[0]
+    drift_x = final_row["drift_x"].iloc[0]
+    drift_y = final_row["drift_y"].iloc[0]
+    drift_yaw = final_row["drift_yaw"].iloc[0]
+
+    cmd_wz_values.append(cmd_wz)
+    drift_x_values.append(np.abs(drift_x))
+    drift_y_values.append(np.abs(drift_y))
+    total_drift_xy.append(np.sqrt(drift_x**2 + drift_y**2))
+    total_drift_yaw.append(np.abs(drift_yaw))
+
+# Sort by cmd_wz for proper line plotting
+sort_idx = np.argsort(cmd_wz_values)
+cmd_wz_values = np.array(cmd_wz_values)[sort_idx]
+total_drift_xy = np.array(total_drift_xy)[sort_idx]
+total_drift_yaw = np.array(total_drift_yaw)[sort_idx]
+drift_x_values = np.array(drift_x_values)[sort_idx]
+drift_y_values = np.array(drift_y_values)[sort_idx]
+
+# Create subplots
+fig, axes = plt.subplots(1, 3, figsize=(15, 5))
+
+# Plot 1: cmd_wz vs total XY drift
+axes[0].plot(cmd_wz_values, total_drift_xy, "-o", color="blue", markersize=8)
+axes[0].set_xlabel("cmd_wz (rad/s)")
+axes[0].set_ylabel("Total XY Drift (m)")
+axes[0].set_title("Angular Velocity vs Total Position Drift")
+axes[0].grid(True)
+
+# Plot 2: cmd_wz vs drift components
+axes[1].plot(cmd_wz_values, drift_x_values, "-o", color="red", label="|Drift X|", markersize=8)
+axes[1].plot(cmd_wz_values, drift_y_values, "-s", color="green", label="|Drift Y|", markersize=8)
+axes[1].set_xlabel("cmd_wz (rad/s)")
+axes[1].set_ylabel("Absolute Drift (m)")
+axes[1].set_title("Angular Velocity vs Absolute Drift Components")
+axes[1].legend()
+axes[1].grid(True)
+
+# Plot 3: cmd_wz vs yaw drift
+axes[2].plot(cmd_wz_values, total_drift_yaw, "-o", color="purple", markersize=8)
+axes[2].set_xlabel("cmd_wz (rad/s)")
+axes[2].set_ylabel("|Yaw Drift| (rad)")
+axes[2].set_title("Angular Velocity vs Absolute Yaw Drift")
+axes[2].grid(True)
+
+plt.tight_layout()
 
 plt.show()
