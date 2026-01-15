@@ -322,9 +322,6 @@ class SequentialTaskExecutor(TaskExecutorBase):
             pass
             
     def compute_action(self) -> TurtleBotControl:
-
-        control = TurtleBotControl()
-
         """
         Generate control commands based on current state.
         
@@ -341,6 +338,7 @@ class SequentialTaskExecutor(TaskExecutorBase):
             - v: Linear velocity (m/s)
             - omega: Angular velocity (rad/s)
         """
+        control = TurtleBotControl()
         ########################
         # TODO: Student fill-in
         ########################
