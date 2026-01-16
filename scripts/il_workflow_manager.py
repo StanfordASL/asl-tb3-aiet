@@ -292,26 +292,29 @@ class ILWorkflowManager:
                     self.debug_print(f"Download progress: {int(status.progress() * 100)}%")
         return True
 
-    def run_workflow(self):
+    def run_workflow(self, manage_colab=False):
         """Execute the complete workflow"""
         try:
             print(f"Starting workflow for Robot {self.robot_name}")
-            
+
             print("1. Preprocessing data...")
             self.preprocess_data()
-            
+
             if not self.processed_data_path.exists():
                 raise FileNotFoundError("Preprocessing did not generate processed_data.pkl")
-            
+
+            if not manage_colab:
+                return
+
             print("2. Setting up Google Drive connection...")
             service = self.setup_service_account()
-            
+
             if self.verbose:
                 self.check_drive_access(service)
-            
+
             print("3. Uploading processed data to Drive...")
             self.upload_to_drive(service)
-            
+
             print("4. Getting Colab notebook URL...")
             notebook_url = self.get_notebook_url(service)
             if notebook_url:
@@ -321,7 +324,7 @@ class ILWorkflowManager:
                 print("2. Define neural network architecture")
                 print("3. Run all cells")
                 input("\nPress Enter once training is complete...")
-                
+
                 print("5. Downloading trained model...")
                 if self.download_model(service):
                     print("Model downloaded successfully!")
@@ -334,11 +337,13 @@ class ILWorkflowManager:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Manage IL training workflow")
-    parser.add_argument('--robot-name', type=str, help='Robot Name (e.g., orwell)', 
+    parser.add_argument('--robot-name', type=str, help='Robot Name (e.g., orwell)',
                        default=None)
     parser.add_argument('--verbose', '-v', action='store_true',
                        help='Enable verbose debug output')
+    parser.add_argument('--manage-colab', action='store_true',
+                       help='Upload data to Drive and manage Colab training')
     args = parser.parse_args()
-    
+
     manager = ILWorkflowManager(robot_name=args.robot_name, verbose=args.verbose)
-    manager.run_workflow()
+    manager.run_workflow(manage_colab=args.manage_colab)
