@@ -32,7 +32,7 @@ class TaskExecutorBase(BaseController):
     def __init__(self, node_name: str):
         super().__init__(node_name)
 
-        self.declare_parameter("target_classes", ["stop sign", "traffic light"])
+        self.declare_parameter("target_classes", ["person", "airplane"])
         
         # State management
         self.current_state = TaskState.SEARCHING
@@ -67,8 +67,7 @@ class TaskExecutorBase(BaseController):
     @property
     def database_complete(self) -> bool:
         """Check if all required targets are in database"""
-        return all(target in self.target_database 
-                  for target in self.required_targets)
+        return all(target in self.target_database for target in self.required_targets)
     
     def clear_database(self):
         """Clear the target database"""

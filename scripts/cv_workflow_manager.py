@@ -357,7 +357,7 @@ if __name__ == '__main__':
                        help='Enable verbose debug output')
     args = parser.parse_args()
     
-    manager = CVWorkflowManager(robot_id=args.robot_id, verbose=args.verbose)
+    manager = CVWorkflowManager(robot_name=args.robot_name, verbose=args.verbose)
     manager.run_workflow()
 #    CVWorkflowManager.send_file(local_path=os.path.expanduser('~/section_assets/finetuned_ssd_model.pth'),
 #                                remote_path='/home/aa274/section_assets/finetuned_ssd_model.pth')

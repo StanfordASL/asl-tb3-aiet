@@ -19,7 +19,7 @@ from std_msgs.msg import Bool
 #     FINISHED = auto()           # Task completed
 
 ## From msg/TargetMarker.msg:
-# # Target type (e.g., "stop sign" or "traffic light")
+# # Target type (e.g., "person" or "airplane")
 # string target_type
 # 
 # # Position in map frame
@@ -83,24 +83,6 @@ class SequentialTaskExecutor(TaskExecutorBase):
                 self.stats['navigated_objects'].add(self.target_2_name)
 
         self.nav_success = msg.data
-    
-    @property
-    def database_complete(self) -> bool:
-        """Check if all required targets are in database"""
-        return all(target in self.target_database for target in self.required_targets)
-
-    @property
-    def waited_long_enough(self) -> bool:
-        """Check if the robot waited long enough at the stop sign."""
-        if self.start_wait_time is None:
-            self.get_logger().error("Requested access to property waited_long_enough before start_wait_time was set. Returning False.")
-            return False
-        return self.get_current_time() - self.start_wait_time >= self.wait_duration
-    
-    @property
-    def navigation_successful(self) -> bool:
-        """Check if navigation was successful."""
-        return self.nav_success
 
     @property
     def active(self) -> bool:
@@ -275,6 +257,25 @@ class SequentialTaskExecutor(TaskExecutorBase):
             self.get_logger().info(f"  {state.name}: {duration:.2f} seconds")
         self.get_logger().info("=" * 60)
 
+    # TODO: You will have to use these three properties in the code below.
+    @property
+    def database_complete(self) -> bool:
+        """Check if all required targets are in database"""
+        return all(target in self.target_database for target in self.required_targets)
+
+    @property
+    def waited_long_enough(self) -> bool:
+        """Check if the robot waited long enough at the person."""
+        if self.start_wait_time is None:
+            self.get_logger().error("Requested access to property waited_long_enough before start_wait_time was set. Returning False.")
+            return False
+        return self.get_current_time() - self.start_wait_time >= self.wait_duration
+
+    @property
+    def navigation_successful(self) -> bool:
+        """Check if navigation was successful."""
+        return self.nav_success
+
     # =========== End of Helper Functions =========== #
 
     # =========== Start of student implementation below =========== #
@@ -287,8 +288,8 @@ class SequentialTaskExecutor(TaskExecutorBase):
         - Transition when database_complete is True
         
         2. NAV_TO_TARGET_1:
-        - If not navigating (not in_planning) and traffic light in database:
-            * Start navigation to traffic light
+        - If not navigating (not in_planning) and person in database:
+            * Start navigation to person
         - Check for transition to STOP state
         
         3. STOP:
@@ -296,8 +297,8 @@ class SequentialTaskExecutor(TaskExecutorBase):
         - Transition to NAV_TO_TARGET_2 after wait_duration
         
         4. NAV_TO_TARGET_2:
-        - If not navigating and stop sign in database:
-            * Start navigation to stop sign
+        - If not navigating and airplane in database:
+            * Start navigation to airplane
         - Check for transition to FINISHED state
         """
         ########################
@@ -321,9 +322,6 @@ class SequentialTaskExecutor(TaskExecutorBase):
             pass
             
     def compute_action(self) -> TurtleBotControl:
-
-        control = TurtleBotControl()
-
         """
         Generate control commands based on current state.
         
@@ -340,6 +338,7 @@ class SequentialTaskExecutor(TaskExecutorBase):
             - v: Linear velocity (m/s)
             - omega: Angular velocity (rad/s)
         """
+        control = TurtleBotControl()
         ########################
         # TODO: Student fill-in
         ########################

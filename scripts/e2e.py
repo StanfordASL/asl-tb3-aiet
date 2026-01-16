@@ -19,6 +19,8 @@ import torchvision
 
 ######## Copy and paste the definition of your behavior cloning policy here ########
 
+# TODO Replace the following combined_loss function and MLP class definition if you changed the model architecture in your Google colab notebook!
+
 # Combined Loss Function
 def combined_loss(classification_predict, classification_targets, regression_predict, regression_targets):
     """
@@ -182,7 +184,7 @@ class ILController(BaseController):
         # Create image subscriber
         self.image_sub = self.create_subscription(
             Image,
-            '/image/decompressed', ################################## @JOHN -- SWITCH TO /image/decompressed --- ROHAN
+            '/image/decompressed',
             self.image_callback,
             10
         )

@@ -45,22 +45,9 @@ def generate_launch_description():
                 }.items(),
             )
     
-    node_compressed = Node(
-            package='image_transport',
-            namespace='',
-            executable='republish',
-            name='image_decompression',
-            arguments=["compressed", "raw"],
-            remappings=[
-                ('/in/compressed', '/image/compressed'),
-                ('/out', '/image/decompressed')
-            ]
-        )
-
     # Create and return the launch description
     return LaunchDescription([
         launch_rviz,
         data_dir_arg,
-        node_compressed,
         data_collector_node
     ])

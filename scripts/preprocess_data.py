@@ -182,8 +182,8 @@ class CVPreProcessManager(PreProcessManager):
        self.preprocess = transforms.Compose([transforms.ToTensor()])
        self.img_size = (320, 320) # TODO: Update image size here
        # Define correct ids based on COCO convention
-       self.coco_id_to_name_dict = {10: "traffic light", 13: "stop sign"}
-       self.coco_name_to_id_dict = {"traffic light": 10, "stop sign": 13}
+       self.coco_id_to_name_dict = {5: "airplane", 1: "person"}
+       self.coco_name_to_id_dict = {"airplane": 5, "person": 1}
 
 
    def _process_image(self, img_path):
@@ -295,7 +295,7 @@ class CVPreProcessManager(PreProcessManager):
 
    def visualize_annotations(self, img_path, annotations, id_to_color=None):
         if id_to_color is None:
-            id_to_color = {10: "green", 13: "red"}
+            id_to_color = {1: "green", 5: "red"}
         
         img = Image.open(img_path)
         draw = ImageDraw.Draw(img)
