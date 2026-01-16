@@ -16,7 +16,7 @@ def generate_launch_description():
     )
 
     num_iterations_arg = DeclareLaunchArgument(
-        "num_iterations", default_value="10", description="Number of forward/backward iterations"
+        "num_iterations", default_value="3", description="Number of forward/backward iterations"
     )
 
     node = Node(
