@@ -45,7 +45,7 @@ def generate_launch_description():
                 }.items(),
             )
     
-    node_compressed = Node(
+    node_image_decompress = Node(
             package='image_transport',
             namespace='',
             executable='republish',
@@ -54,13 +54,46 @@ def generate_launch_description():
             remappings=[
                 ('/in/compressed', '/image/compressed'),
                 ('/out', '/image/decompressed')
-            ]
+            ],
+            parameters=[{
+                "qos_overrides": {
+                    "/image/compressed": {
+                        "subscription": {
+                            "reliability": "best_effort",
+                            "depth": 1
+                        }
+                    }
+                }
+            }],
+        )
+
+    node_detector_image_decompress = Node(
+            package='image_transport',
+            namespace='',
+            executable='republish',
+            name='detector_image_decompression',
+            arguments=["compressed", "raw"],
+            remappings=[
+                ('/in/compressed', '/detector_image/compressed'),
+                ('/out', '/detector_image/decompressed')
+            ],
+            parameters=[{
+                "qos_overrides": {
+                    "/detector_image/compressed": {
+                        "subscription": {
+                            "reliability": "best_effort",
+                            "depth": 1
+                        }
+                    }
+                }
+            }],
         )
 
     # Create and return the launch description
     return LaunchDescription([
         launch_rviz,
         data_dir_arg,
-        node_compressed,
+        node_image_decompress,
+        node_detector_image_decompress,
         data_collector_node
     ])

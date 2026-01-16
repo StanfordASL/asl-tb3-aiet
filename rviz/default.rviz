@@ -256,11 +256,11 @@ Visualization Manager:
       Size (m): 0.05000000074505806
       Style: Flat Squares
       Topic:
-        Depth: 5
+        Depth: 1
         Durability Policy: Volatile
         Filter size: 10
         History Policy: Keep Last
-        Reliability Policy: Reliable
+        Reliability Policy: Best Effort
         Value: /scan
       Use Fixed Frame: true
       Use rainbow: true
@@ -286,11 +286,11 @@ Visualization Manager:
       Name: Image
       Normalize Range: true
       Topic:
-        Depth: 5
+        Depth: 1
         Durability Policy: Volatile
         History Policy: Keep Last
-        Reliability Policy: Reliable
-        Value: /detector_image
+        Reliability Policy: Best Effort
+        Value: /detector_image/decompressed
       Value: false
     - Class: rviz_default_plugins/Image
       Enabled: true
@@ -300,10 +300,10 @@ Visualization Manager:
       Name: Image
       Normalize Range: true
       Topic:
-        Depth: 5
+        Depth: 1
         Durability Policy: Volatile
         History Policy: Keep Last
-        Reliability Policy: Reliable
+        Reliability Policy: Best Effort
         Value: /image/decompressed
       Value: true
   Enabled: true
