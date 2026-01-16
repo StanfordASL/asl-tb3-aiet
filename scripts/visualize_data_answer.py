@@ -176,10 +176,6 @@ plt.legend()
 plt.axis("equal")
 plt.grid(True)
 
-## NOTE: You need to vibe code the following code blocks. 
-## NOTE: You do not need to ask CHATGPT one by one, just copy the whole section from ## START CODE BLOCK to ## END CODE BLOCK.
-## START CODE BLOCK
-
 # =========================
 # Figure 3: cmd_wz vs Total Drift (from all files)
 # =========================
@@ -195,43 +191,33 @@ drift_y_values = []
 for csv_file in csv_files:
     file_df = pd.read_csv(csv_file)
 
-    # TODO: Get the final backward_end row (last iteration)
-    # Hint: Find the maximum iteration number, then filter for backward_end phase
-    max_iter = None  # TODO: Fill in - use file_df["iteration"].max()
-    final_row = None  # TODO: Fill in - filter file_df for iteration == max_iter AND phase == "backward_end"
+    # Get the final backward_end row (last iteration)
+    max_iter = file_df["iteration"].max()
+    final_row = file_df[(file_df["iteration"] == max_iter) & (file_df["phase"] == "backward_end")]
 
-    if final_row is None or final_row.empty:
+    if final_row.empty:
         continue
 
-    # TODO: Get cmd_wz from any forward_end row (they should all be the same for a file)
-    # Hint: Filter the dataframe for forward_end phase
-    fwd_rows = None  # TODO: Fill in - filter file_df for phase == "forward_end"
-    
-    if fwd_rows is None or fwd_rows.empty:
+    # Get cmd_wz from any forward_end row (they should all be the same for a file)
+    fwd_rows = file_df[file_df["phase"] == "forward_end"]
+    if fwd_rows.empty:
         continue
 
-    # TODO: Extract cmd_wz, drift_x, and drift_y values from the dataframe rows
-    # Hint: Use .iloc[0] to get the first (and only) value from the filtered rows
-    cmd_wz = None  # TODO: Fill in - extract from fwd_rows using ["cmd_wz"].iloc[0]
-    drift_x = None  # TODO: Fill in - extract from final_row using ["drift_x"].iloc[0]
-    drift_y = None  # TODO: Fill in - extract from final_row using ["drift_y"].iloc[0]
+    cmd_wz = fwd_rows["cmd_wz"].iloc[0]
+    drift_x = final_row["drift_x"].iloc[0]
+    drift_y = final_row["drift_y"].iloc[0]
 
-    # TODO: Append values to lists (use absolute values for drift components)
-    # Hint: Use np.abs() for drift components, and calculate Euclidean distance for total_drift_xy
-    cmd_wz_values.append(cmd_wz)  # TODO: Fill in
-    drift_x_values.append(None)  # TODO: Fill in - use np.abs(drift_x)
-    drift_y_values.append(None)  # TODO: Fill in - use np.abs(drift_y)
-    total_drift_xy.append(None)  # TODO: Fill in - calculate sqrt(drift_x^2 + drift_y^2)
+    cmd_wz_values.append(cmd_wz)
+    drift_x_values.append(np.abs(drift_x))
+    drift_y_values.append(np.abs(drift_y))
+    total_drift_xy.append(np.sqrt(drift_x**2 + drift_y**2))
 
-# TODO: Sort all arrays by cmd_wz_values for proper line plotting
-# Hint: Use np.argsort to get indices, then use those indices to sort all arrays
-sort_idx = None  # TODO: Fill in - use np.argsort(cmd_wz_values)
-cmd_wz_values = None  # TODO: Fill in - convert to numpy array and sort using sort_idx
-total_drift_xy = None  # TODO: Fill in - convert to numpy array and sort using sort_idx
-drift_x_values = None  # TODO: Fill in - convert to numpy array and sort using sort_idx
-drift_y_values = None  # TODO: Fill in - convert to numpy array and sort using sort_idx
-
-## END CODE BLOCK
+# Sort by cmd_wz for proper line plotting
+sort_idx = np.argsort(cmd_wz_values)
+cmd_wz_values = np.array(cmd_wz_values)[sort_idx]
+total_drift_xy = np.array(total_drift_xy)[sort_idx]
+drift_x_values = np.array(drift_x_values)[sort_idx]
+drift_y_values = np.array(drift_y_values)[sort_idx]
 
 # Create subplots
 fig, axes = plt.subplots(1, 2, figsize=(12, 5))

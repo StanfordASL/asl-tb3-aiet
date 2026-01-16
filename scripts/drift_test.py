@@ -53,7 +53,7 @@ class DriftTest(Node):
         self.csv_writer = csv.writer(self.logfile)
 
         self.csv_writer.writerow(
-            ["iteration", "phase", "cmd_vx", "cmd_wz", "pos_x", "pos_y", "yaw", "drift_x", "drift_y", "drift_yaw"]
+            ["iteration", "phase", "cmd_vx", "cmd_wz", "pos_x", "pos_y", "drift_x", "drift_y"]
         )
 
         self.get_logger().info(f"Logging to: {path}")
@@ -89,7 +89,6 @@ class DriftTest(Node):
 
         pos_x = self.current_pose.position.x
         pos_y = self.current_pose.position.y
-        yaw = self.get_yaw_from_quaternion(self.current_pose.orientation)
 
         # Calculate drift from initial position in robot's initial reference frame
         if self.initial_pose is not None:
@@ -105,21 +104,12 @@ class DriftTest(Node):
             # drift_y = lateral drift (perpendicular to initial heading)
             drift_x = dx_world * math.cos(initial_yaw) + dy_world * math.sin(initial_yaw)
             drift_y = -dx_world * math.sin(initial_yaw) + dy_world * math.cos(initial_yaw)
-
-            # Angular drift
-            drift_yaw = yaw - initial_yaw
-            # Normalize angle to [-pi, pi]
-            while drift_yaw > math.pi:
-                drift_yaw -= 2 * math.pi
-            while drift_yaw < -math.pi:
-                drift_yaw += 2 * math.pi
         else:
             drift_x = 0.0
             drift_y = 0.0
-            drift_yaw = 0.0
 
         self.csv_writer.writerow(
-            [iteration, phase, cmd_vx, cmd_wz, pos_x, pos_y, yaw, drift_x, drift_y, drift_yaw]
+            [iteration, phase, cmd_vx, cmd_wz, pos_x, pos_y, drift_x, drift_y]
         )
         self.logfile.flush()
 
