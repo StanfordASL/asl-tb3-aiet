@@ -71,8 +71,9 @@ class MLP(nn.Module):
         - hidden_size (int): Number of neurons in the first hidden layer.
         - Note: You can add more hidden layers as required by adding more 'hidden_size' arguments in __init__.
 
-        - Define fully connected layers (`nn.Linear`).
-        - Define non-linearity for activation for activation (see: https://pytorch.org/docs/stable/nn.html#non-linear-activations-weighted-sum-nonlinearity).
+        TODO:
+        - We already defined the base model for you.
+          You can make adjustments to the model architecture here if you want.
 
         Hint:
         - For layer dimensions, follow these:
@@ -92,10 +93,10 @@ class MLP(nn.Module):
         self.bn2 = nn.BatchNorm1d(hidden_size // 2)
         self.dropout2 = nn.Dropout(self.dropout_ratio)
 
-
         # Output layers
         self.classification_output = nn.Linear(hidden_size // 2, 2)  # 2 classes: linear, angular
         self.regression_output = nn.Linear(hidden_size // 2, 1)     # 1 output: velocity value
+
 
     def forward(self, x):
         """
@@ -108,11 +109,8 @@ class MLP(nn.Module):
         - classification_logits (Tensor): Logits for classification task, i.e., linear or angular velocity (batch_size, 2).
         - regression_output (Tensor): Scalar values for regression task, i.e., velocity value (batch_size, 1).
 
-        - Pass the input `x` through the layers defined in `__init__`.
-        - Apply ReLU activation and dropout after each layer (except the output layers).
-        - Separate the output into two branches:
-          * One for classification logits
-          * One for regression output
+        TODO:
+        - If you adjusted the model architecture above, you need to add these adjustments here as well.
 
         Hint:
         - Use the layers and activations in the following order:
