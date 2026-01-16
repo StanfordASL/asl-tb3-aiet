@@ -100,37 +100,16 @@ class SimpleNav(TaskExecutorBase):
 
         # Publishers
         """
-        Publish navigation goal commands to /cmd_nav using self.create_publisher()
+        Publish navigation goal commands to the `/cmd_nav` topic.
+        You can create a publisher using the function `self.create_publisher(...)`.
         Syntax hint:
         self.example_pub = self.create_publisher(VariableType, "topic_to_publish_to", 10)
-        See the Section 1 instructions for how to view the topics you can publish to
-        You can call this publisher elswhere in your code after you have created it
-        Hint: The variable type of the state of a TurtleBot is TurtleBotState.
-        This variable contains x, y, and theta attributes in the global frame
-
-        We are creating an object of type publisher. This object should become an attribute of this ROS node.
-        Therefore, start by writing `self.cmd_nav_publisher = `.
-        We tell python that we want to create an attribute called cmd_nav_publisher.
-        Continue by typing self.create_pu... -> You should see a list of functions showing up.
-        Select create_publisher with the arrow keys and press enter.
-        You can also press Ctrl + spacebar to make these suggestions appear.
-        Now type () and the tooltip for the function arguments appear.
-        You can also right click on the function and go to definition to see the full function definition.
-        Function arguments that are followed by = ... are optional -> You don't have to set them, but you might want to later.
-        All other arguments are not optional and have to be set at function call.
-        Start by typing ms... and you will see msg_type=. Press enter to autocomplete.
-        Now you have to define the message type. 
-        For you convenience, we already imported this message type for you. Scroll all the way up and check if you can find the correct import.
-        Now, just complete msg_type=Tu...
-        Continue by typing , and the tooltip should reappear.
-        Next, type to... and autocomplete to topic=. What is our topic name?
-        Make sure you put the topic name in "" (or '') and start with a leading /...
-        Finish the call with , qos_profile=10.
-        Congratulations, you wrote your first line of python today. You are amazing.
+        Hint: The variable type of the state of a TurtleBot is `TurtleBotState`, which contains x, y, and theta attributes in the global frame.
+        The `/cmd_nav` publisher object should be called `self.cmd_nav_publisher`.
         """
         # --- YOUR CODE HERE ---
-        # TODO: Create /cmd_nav publisher
-    
+        # TODO: Create the self.cmd_nav_publisher object
+        
         # --- END ---
 
 
