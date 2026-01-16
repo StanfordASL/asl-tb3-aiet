@@ -8,6 +8,7 @@ from pathlib import Path
 import rclpy
 from rclpy.node import Node
 from rclpy.time import Time
+from rclpy.qos import QoSProfile, ReliabilityPolicy, HistoryPolicy
 
 from sensor_msgs.msg import PointCloud2
 from nav_msgs.msg import Odometry
@@ -44,9 +45,16 @@ class ICPNode(Node):
         self.lidar_pose = None
         self.transformation = np.eye(4)
         self.use_open3d = False
-        
-        self.pcd_sub = self.create_subscription(PointCloud2, '/velodyne_points', self.pcd_callback, 10)
-        self.odom_sub = self.create_subscription(Odometry, '/odom', self.odom_callback, 10)
+
+        # QoS profile for sensor data
+        sensor_qos = QoSProfile(
+            reliability=ReliabilityPolicy.BEST_EFFORT,
+            history=HistoryPolicy.KEEP_LAST,
+            depth=1
+        )
+
+        self.pcd_sub = self.create_subscription(PointCloud2, '/velodyne_points', self.pcd_callback, sensor_qos)
+        self.odom_sub = self.create_subscription(Odometry, '/odom', self.odom_callback, sensor_qos)
         
         self.icp_poses = []
         self.odom_poses = []

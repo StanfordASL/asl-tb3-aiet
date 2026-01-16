@@ -2,6 +2,7 @@
 
 import rclpy
 from rclpy.node import Node
+from rclpy.qos import QoSProfile, ReliabilityPolicy, HistoryPolicy
 from sensor_msgs.msg import Imu, LaserScan
 from asl_tb3_msgs.msg import TurtleBotState
 from asl_tb3_aiet.msg import TargetMarker
@@ -18,9 +19,16 @@ class TargetLocalizer(Node):
     def __init__(self):
         super().__init__('target_localizer_node')
 
+        # QoS profile for sensor data
+        self.sensor_qos = QoSProfile(
+            reliability=ReliabilityPolicy.BEST_EFFORT,
+            history=HistoryPolicy.KEEP_LAST,
+            depth=1
+        )
+
         # Subscribers
-        self.imu_sub = self.create_subscription(Imu, '/imu', self.imu_callback, 10)
-        self.scan_sub = self.create_subscription(LaserScan, '/scan', self.scan_callback, 10)
+        self.imu_sub = self.create_subscription(Imu, '/imu', self.imu_callback, self.sensor_qos)
+        self.scan_sub = self.create_subscription(LaserScan, '/scan', self.scan_callback, self.sensor_qos)
         self.state_sub = self.create_subscription(TurtleBotState, '/state', self.state_callback, 10)
         self.detector_class_sub = self.create_subscription(String, '/detector_class', self.localize_targets_callback, 10)
 

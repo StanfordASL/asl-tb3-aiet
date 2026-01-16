@@ -6,6 +6,7 @@ import open3d as o3d
 import rclpy
 from rclpy.node import Node
 from rclpy.time import Time
+from rclpy.qos import QoSProfile, ReliabilityPolicy, HistoryPolicy
 
 from sensor_msgs.msg import PointCloud2
 from visualization_msgs.msg import Marker
@@ -42,8 +43,15 @@ class ICPNode(Node):
         self.lidar_pose = None
         self.transformation = np.eye(4)
         self.use_open3d = True
-        
-        self.pcd_sub = self.create_subscription(PointCloud2, '/velodyne_points', self.pcd_callback, 10)
+
+        # QoS profile for sensor data
+        sensor_qos = QoSProfile(
+            reliability=ReliabilityPolicy.BEST_EFFORT,
+            history=HistoryPolicy.KEEP_LAST,
+            depth=1
+        )
+
+        self.pcd_sub = self.create_subscription(PointCloud2, '/velodyne_points', self.pcd_callback, sensor_qos)
         self.marker_pub = self.create_publisher(Marker, 'marker', 10)
         
         self.marker = Marker()

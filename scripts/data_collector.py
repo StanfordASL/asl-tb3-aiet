@@ -2,6 +2,7 @@
 
 import rclpy
 from rclpy.node import Node
+from rclpy.qos import QoSProfile, ReliabilityPolicy, HistoryPolicy
 import cv2
 from cv_bridge import CvBridge
 from sensor_msgs.msg import Image
@@ -21,13 +22,20 @@ class DataCollector(Node):
         
         # Initialize data storage
         self.data_dir = self.declare_parameter('data_dir', os.path.expanduser('~/section_assets/driving_data')).value
-        
+
+        # QoS profile for sensor data
+        sensor_qos = QoSProfile(
+            reliability=ReliabilityPolicy.BEST_EFFORT,
+            history=HistoryPolicy.KEEP_LAST,
+            depth=1
+        )
+
         # Create subscribers
         self.image_sub = self.create_subscription(
             Image,
             '/image/decompressed',
             self.image_callback,
-            5
+            sensor_qos
         )
         self.cmd_vel_sub = self.create_subscription(
             Twist,

@@ -1,5 +1,6 @@
 import rclpy
 from rclpy.node import Node
+from rclpy.qos import QoSProfile, ReliabilityPolicy, HistoryPolicy
 from sensor_msgs.msg import LaserScan
 from visualization_msgs.msg import Marker, InteractiveMarker, InteractiveMarkerControl
 from interactive_markers.interactive_marker_server import InteractiveMarkerServer
@@ -10,8 +11,15 @@ class LaserScanIndexInteractive(Node):
     def __init__(self):
         super().__init__('laser_scan_index_interactive')
 
+        # QoS profile for sensor data
+        sensor_qos = QoSProfile(
+            reliability=ReliabilityPolicy.BEST_EFFORT,
+            history=HistoryPolicy.KEEP_LAST,
+            depth=1
+        )
+
         # Subscriber for LaserScan data
-        self.scan_subscriber = self.create_subscription(LaserScan, '/scan', self.scan_callback, 10)
+        self.scan_subscriber = self.create_subscription(LaserScan, '/scan', self.scan_callback, sensor_qos)
 
         # MarkerArray publisher for displaying text indices
         self.marker_pub = self.create_publisher(Marker, '/scan_index_markers', 10)
