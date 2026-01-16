@@ -33,7 +33,7 @@ class DataCollector(Node):
         # Create subscribers
         self.image_sub = self.create_subscription(
             Image,
-            '/image/decompressed',
+            '/image',
             self.image_callback,
             sensor_qos
         )

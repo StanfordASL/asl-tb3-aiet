@@ -40,27 +40,5 @@ def generate_launch_description():
                 executable="e2e.py",
                 package="asl_tb3_aiet",
             ),
-            Node(
-                package='image_transport',
-                namespace='',
-                executable='republish',
-                name='image_decompression',
-                arguments=["compressed", "raw"],
-                remappings=[
-                    ('/in/compressed', '/image/compressed'),
-                    ('/out', '/image/decompressed')
-                ],
-            ),
-            Node(
-                package='image_transport',
-                namespace='',
-                executable='republish',
-                name='detector_image_decompression',
-                arguments=["compressed", "raw"],
-                remappings=[
-                    ('/in/compressed', '/detector_image/compressed'),
-                    ('/out', '/detector_image/decompressed')
-                ],
-            )
         ]
     )
