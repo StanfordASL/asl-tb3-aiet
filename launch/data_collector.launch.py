@@ -55,16 +55,6 @@ def generate_launch_description():
                 ('/in/compressed', '/image/compressed'),
                 ('/out', '/image/decompressed')
             ],
-            parameters=[{
-                "qos_overrides": {
-                    "/image/compressed": {
-                        "subscription": {
-                            "reliability": "best_effort",
-                            "depth": 1
-                        }
-                    }
-                }
-            }],
         )
 
     node_detector_image_decompress = Node(
@@ -77,16 +67,6 @@ def generate_launch_description():
                 ('/in/compressed', '/detector_image/compressed'),
                 ('/out', '/detector_image/decompressed')
             ],
-            parameters=[{
-                "qos_overrides": {
-                    "/detector_image/compressed": {
-                        "subscription": {
-                            "reliability": "best_effort",
-                            "depth": 1
-                        }
-                    }
-                }
-            }],
         )
 
     # Create and return the launch description
