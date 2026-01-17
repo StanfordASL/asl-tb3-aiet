@@ -53,7 +53,7 @@ class DriftTest(Node):
         self.csv_writer = csv.writer(self.logfile)
 
         self.csv_writer.writerow(
-            ["iteration", "phase", "cmd_vx", "cmd_wz", "pos_x", "pos_y", "drift_x", "drift_y"]
+            ["iteration", "cmd_vx", "cmd_wz", "pos_x", "pos_y", "longitudinal_drift", "lateral_drift"]
         )
 
         self.get_logger().info(f"Logging to: {path}")
@@ -80,38 +80,35 @@ class DriftTest(Node):
         cosy_cosp = 1 - 2 * (q.y * q.y + q.z * q.z)
         return math.atan2(siny_cosp, cosy_cosp)
 
-    def log_position(self, iteration, phase, cmd_vx, cmd_wz):
-        """Log current position with drift from initial position"""
-        if self.current_pose is None:
+    def log_drift(self, iteration, cmd_vx, cmd_wz):
+        """Log drift from initial position when robot returns (at backward_end)"""
+        if self.current_pose is None or self.initial_pose is None:
             return
-
-        self.get_logger().info(f"log_position called: phase={phase}, cmd_vx={cmd_vx}, cmd_wz={cmd_wz}")
 
         pos_x = self.current_pose.position.x
         pos_y = self.current_pose.position.y
 
-        # Calculate drift from initial position in robot's initial reference frame
-        if self.initial_pose is not None:
-            # Calculate displacement in world frame
-            dx_world = pos_x - self.initial_pose.position.x
-            dy_world = pos_y - self.initial_pose.position.y
+        # Calculate displacement in world frame
+        dx_world = pos_x - self.initial_pose.position.x
+        dy_world = pos_y - self.initial_pose.position.y
 
-            # Get initial orientation
-            initial_yaw = self.get_yaw_from_quaternion(self.initial_pose.orientation)
+        # Get initial orientation
+        initial_yaw = self.get_yaw_from_quaternion(self.initial_pose.orientation)
 
-            # Transform displacement to robot's initial reference frame
-            # drift_x = forward/backward drift (along initial heading)
-            # drift_y = lateral drift (perpendicular to initial heading)
-            drift_x = dx_world * math.cos(initial_yaw) + dy_world * math.sin(initial_yaw)
-            drift_y = -dx_world * math.sin(initial_yaw) + dy_world * math.cos(initial_yaw)
-        else:
-            drift_x = 0.0
-            drift_y = 0.0
+        # Transform displacement to robot's initial reference frame
+        # longitudinal_drift = forward/backward drift (along initial heading)
+        # lateral_drift = lateral drift (perpendicular to initial heading)
+        longitudinal_drift = dx_world * math.cos(initial_yaw) + dy_world * math.sin(initial_yaw)
+        lateral_drift = -dx_world * math.sin(initial_yaw) + dy_world * math.cos(initial_yaw)
 
         self.csv_writer.writerow(
-            [iteration, phase, cmd_vx, cmd_wz, pos_x, pos_y, drift_x, drift_y]
+            [iteration, cmd_vx, cmd_wz, pos_x, pos_y, longitudinal_drift, lateral_drift]
         )
         self.logfile.flush()
+        
+        self.get_logger().info(
+            f"Iteration {iteration} complete - Drift from initial: longitudinal={longitudinal_drift:.4f}m, lateral={lateral_drift:.4f}m"
+        )
 
     # ---------------------------
     # Control loop
@@ -124,7 +121,6 @@ class DriftTest(Node):
         # Record initial position
         if self.phase == "waiting_initial":
             self.initial_pose = self.current_pose
-            self.log_position(0, "initial", 0.0, 0.0)
             self.get_logger().info(
                 f"Initial position recorded: x={self.initial_pose.position.x:.3f}, y={self.initial_pose.position.y:.3f}"
             )
@@ -143,9 +139,7 @@ class DriftTest(Node):
                 self.cmd_vel_msg.linear.x = self.cmd_vel_value
                 self.cmd_vel_msg.angular.z = self.cmd_vel_ang_value
             else:
-                # Forward phase complete, log position and switch to backward
-                self.get_logger().info(f"Logging forward_end: cmd_vel_ang_value = {self.cmd_vel_ang_value}")
-                self.log_position(self.current_iteration, "forward_end", self.cmd_vel_value, self.cmd_vel_ang_value)
+                # Forward phase complete, switch to backward
                 self.phase = "backward"
                 self.start_time = self.get_clock().now()
 
@@ -155,9 +149,9 @@ class DriftTest(Node):
                 self.cmd_vel_msg.linear.x = -self.cmd_vel_value
                 self.cmd_vel_msg.angular.z = -self.cmd_vel_ang_value
             else:
-                # Backward phase complete, log position
-                self.log_position(
-                    self.current_iteration, "backward_end", -self.cmd_vel_value, -self.cmd_vel_ang_value
+                # Backward phase complete, log drift from initial position
+                self.log_drift(
+                    self.current_iteration, -self.cmd_vel_value, -self.cmd_vel_ang_value
                 )
                 self.current_iteration += 1
 
