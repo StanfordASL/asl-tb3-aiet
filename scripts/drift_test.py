@@ -133,15 +133,23 @@ class DriftTest(Node):
         t = (now - self.start_time).nanoseconds / 1e9
 
         # State machine for forward/backward cycles
+        if self.phase == "complete":
+            # Already done, don't publish anything
+            return
+
         if self.phase == "forward":
             if t < self.cmd_time_value:
                 # Still in forward phase
                 self.cmd_vel_msg.linear.x = self.cmd_vel_value
                 self.cmd_vel_msg.angular.z = self.cmd_vel_ang_value
             else:
-                # Forward phase complete, switch to backward
+                # Forward phase complete, stop and switch to backward
+                self.cmd_vel_msg.linear.x = 0.0
+                self.cmd_vel_msg.angular.z = 0.0
+                self.cmd_pub.publish(self.cmd_vel_msg)
                 self.phase = "backward"
                 self.start_time = self.get_clock().now()
+                return
 
         elif self.phase == "backward":
             if t < self.cmd_time_value:
@@ -149,7 +157,12 @@ class DriftTest(Node):
                 self.cmd_vel_msg.linear.x = -self.cmd_vel_value
                 self.cmd_vel_msg.angular.z = -self.cmd_vel_ang_value
             else:
-                # Backward phase complete, log drift from initial position
+                # Backward phase complete, stop first
+                self.cmd_vel_msg.linear.x = 0.0
+                self.cmd_vel_msg.angular.z = 0.0
+                self.cmd_pub.publish(self.cmd_vel_msg)
+
+                # Log drift from initial position
                 self.log_drift(
                     self.current_iteration, -self.cmd_vel_value, -self.cmd_vel_ang_value
                 )
@@ -161,17 +174,16 @@ class DriftTest(Node):
                     self.start_time = self.get_clock().now()
                 else:
                     self.phase = "complete"
-                    self.cmd_vel_msg.linear.x = 0.0
-                    self.cmd_vel_msg.angular.z = 0.0
-                    self.cmd_pub.publish(self.cmd_vel_msg)
                     self.get_logger().info("Drift test complete. Shutting down.")
                     self.cleanup_and_shutdown()
-                    return
+                return
 
         # Publish command
         self.cmd_pub.publish(self.cmd_vel_msg)
 
     def cleanup_and_shutdown(self):
+        # Cancel the timer to stop the update loop
+        self.timer.cancel()
         if self.logfile:
             self.logfile.close()
         raise SystemExit
