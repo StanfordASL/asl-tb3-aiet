@@ -153,14 +153,14 @@ class ILController(BaseController):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         
         # Load feature extractor
-        model_path = os.path.expanduser("~/section_assets/finetuned_ssd_model.pth")
+        model_path = os.path.expanduser("~/section_assets/finetuned_ssd_model.pkl")
         if os.path.exists(model_path):
             self.get_logger().info("Using finetuned model to preprocess features for inference")
             # Use COCO_V1 weights like in training
             self.feature_extractor = ssdlite320_mobilenet_v3_large(
                 weights=torchvision.models.detection.SSDLite320_MobileNet_V3_Large_Weights.COCO_V1
             )
-            state_dict = torch.load(self.cv_model_path, map_location=self.device, weights_only=True)
+            state_dict = torch.load(model_path, map_location=self.device, weights_only=True)
             self.feature_extractor.load_state_dict(state_dict)
         else:
             self.get_logger().info("Using default SSD model to preprocess features for inference")
@@ -184,7 +184,7 @@ class ILController(BaseController):
         # Create image subscriber
         self.image_sub = self.create_subscription(
             Image,
-            '/image/decompressed',
+            '/image',
             self.image_callback,
             10
         )
