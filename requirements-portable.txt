@@ -223,3 +223,5 @@ websocket-client==1.2.3
 wrapt==1.13.3
 xmljson==0.2.1
 zipp==3.21.0
+catkin_pkg==1.1.0
+empy==3.3.4
