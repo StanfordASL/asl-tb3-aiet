@@ -150,21 +150,28 @@ install_terminator() {
 }
 
 update_repo() {
-    print_info "Updating asl-tb3-aiet repository..."
+    print_info "Updating asl-tb3-* repositories..."
     sudo -u "$REAL_USER" bash <<EOF
-cd "$REPO_DIR"
-git fetch
-git stash
+rm -rf "$WS_DIR/src"
+mkdir "$WS_DIR/src"
+cd "$WS_DIR/src"
+git clone https://github.com/StanfordASL/asl-tb3-aiet.git
+cd asl-tb3-aiet
 git checkout tps-2026
-git pull
+cd "$WS_DIR/src"
+git clone https://github.com/StanfordASL/asl-tb3-driver.git
+cd asl-tb3-driver
+git checkout tps-2026
+cd "$WS_DIR/src"
+git clone https://github.com/StanfordASL/asl-tb3-utils.git
 EOF
-    print_success "asl-tb3-aiet repository updated."
+    print_success "All repositories updated."
 }
 
 clean_local_folders() {
     print_info "Removing old files in section_assests and Downloads."
-    rm -rf "$HOME_DIR/section_assests/"*
-    rm -rf "$HOME_DIR/Downloads/"*
+    rm -rf "$HOME_DIR/section_assets/*"
+    rm -rf "$HOME_DIR/Downloads/*"
     print_success "old files in section_assests and Downloads removed."
 }
 
@@ -180,13 +187,15 @@ EOF
 }
 
 update_bashrc() {
-    print_info "Updating .bashrc."
+    print_info "Updating .bashrc..."
     local robot="$1"
     local domain="$2"
 
+    cp /media/aa274/OrwellBackB/.bashrc "$BASHRC"
+
     sed -i '/^export LAPTOP_ID=/d' "$BASHRC"
     sed -i '/^export ROS_DOMAIN_ID=/d' "$BASHRC"
-    sed -i '/^source /autonomy_ws\/src/asl-tb3-aiet/ros_env\/bin\/activate' "$BASHRC"
+    sed -i '/autonomy_ws\/src\/asl-tb3-aiet\/ros_env\/bin\/activate/d' "$BASHRC"
     sed -i '/autonomy_ws\/install\/setup.bash/d' "$BASHRC"
 
     {
@@ -203,9 +212,8 @@ build_workspace() {
     sudo -u "$REAL_USER" bash <<EOF
 source /opt/ros/humble/setup.bash
 cd "$WS_DIR"
-find src -mindepth 1 -maxdepth 1 -type d ! -name 'asl-tb3-aiet' -exec rm -rf {} +
 rm -rf build install log
-colcon build --symlink-install --packages-select asl_tb3_aiet
+colcon build --symlink-install
 EOF
     print_success "Workspace built."
 }
