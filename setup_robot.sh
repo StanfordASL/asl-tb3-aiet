@@ -151,6 +151,16 @@ regenerate_ssh_keys() {
     print_success "SSH host keys regenerated"
 }
 
+forget_all_wifi() {
+    print_info "Forgetting all existing WIFI connections..."
+    nmcli -t -f NAME connection show | while IFS= read -r c; do 
+         if nmcli -g connection.type connection show "$c" | grep -q 802-11-wireless; then
+              nmcli connection delete "$c"
+         fi
+    done
+    print_success "Successfully forgot all existing WIFI connections."
+}
+
 setup_wifi() {
     local ssid="$1"
     local password="$2"
@@ -165,9 +175,6 @@ setup_wifi() {
     print_info "Enabling WiFi..."
     nmcli radio wifi on
     sleep 2
-
-    # Remove existing Wifi connections
-    nmcli -t -f NAME,TYPE connection show | grep ':802-11-wireless$' | cut -d: -f1 | xargs -r -n1 nmcli connection delete
 
     # Scan for networks
     print_info "Scanning for networks..."
@@ -341,6 +348,7 @@ main() {
     reset_machine_id
     set_hostname "$ROBOT_NAME"
     regenerate_ssh_keys
+    forget_all_wifi
     setup_wifi "$WIFI_SSID" "$WIFI_PASSWORD"
     setup_avahi "$ROBOT_NAME"
     setup_ros_domain_id "$ROS_DOMAIN_ID"
