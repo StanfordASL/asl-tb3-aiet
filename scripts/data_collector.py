@@ -111,7 +111,7 @@ class DataCollector(Node):
         self.get_logger().info(f"Saved {len(self.action_data)} frames of data")
 
     def timer_callback(self):
-        self.get_logger().info("Data collector initialized. Waiting for start command...")
+        # self.get_logger().info("Data collector initialized. Waiting for start command...")
         if self.is_recording and self.latest_image is not None and self.latest_cmd_vel is not None:
             # Save image
             image_filename = os.path.join(
