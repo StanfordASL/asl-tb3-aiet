@@ -16,6 +16,7 @@ from preprocess_data import ILPreProcessManager
 import pickle
 import os
 import torchvision
+from rclpy.qos import QoSProfile, ReliabilityPolicy, HistoryPolicy
 
 ######## Copy and paste the definition of your behavior cloning policy here ########
 
@@ -181,12 +182,19 @@ class ILController(BaseController):
         # Store latest image
         self.latest_image = None
         
+        # Define a Best Effort QoS profile
+        self.qos_profile = QoSProfile(
+            reliability=ReliabilityPolicy.BEST_EFFORT,
+            history=HistoryPolicy.KEEP_LAST,
+            depth=1
+        )
+        
         # Create image subscriber
         self.image_sub = self.create_subscription(
             Image,
             '/image',
             self.image_callback,
-            10
+            self.qos_profile
         )
 
         # Load dataset statistics for normalization
