@@ -22,7 +22,7 @@ def generate_launch_description():
                         [
                             FindPackageShare("asl_tb3_aiet"),
                             "rviz",
-                            "default.rviz",
+                            "image_only.rviz",
                         ]
                     ),
                     "use_sim_time": use_sim_time,
