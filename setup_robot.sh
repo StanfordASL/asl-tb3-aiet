@@ -245,6 +245,71 @@ setup_ros_domain_id() {
     print_info "Run 'source ~/.bashrc' or reboot to apply"
 }
 
+setup_cyclonedds() {
+    print_header "Setting up CycloneDDS"
+
+    local real_user=$(get_real_user)
+    local home_dir="/home/$real_user"
+    local bashrc_path="$home_dir/.bashrc"
+
+    # Prompt for peer IP address (laptop's IP)
+    read -p "Enter the laptop's IP address for CycloneDDS communication: " PEER_IP
+
+    # Validate IP format
+    if ! [[ "$PEER_IP" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+        print_error "Invalid IP address format: $PEER_IP"
+        return 1
+    fi
+
+    # Robot always uses wlan0
+    NETWORK_IFACE="wlan0"
+    print_info "Using network interface: $NETWORK_IFACE"
+
+    # Create cyclonedds.xml config file
+    CYCLONE_CONFIG="$home_dir/cyclonedds.xml"
+    print_info "Creating CycloneDDS config at $CYCLONE_CONFIG..."
+
+    cat > "$CYCLONE_CONFIG" << EOF
+<?xml version="1.0" encoding="UTF-8" ?>
+<CycloneDDS xmlns="https://cdds.io/config">
+    <Domain id="any">
+        <General>
+            <AllowMulticast>false</AllowMulticast>
+
+            <Interfaces>
+                <NetworkInterface name="$NETWORK_IFACE" />
+            </Interfaces>
+
+        </General>
+        <Discovery>
+            <ParticipantIndex>auto</ParticipantIndex>
+            <Peers>
+                <Peer address="$PEER_IP"/>
+                <Peer address="127.0.0.1"/>
+            </Peers>
+        </Discovery>
+    </Domain>
+</CycloneDDS>
+EOF
+
+    chown "$real_user:$real_user" "$CYCLONE_CONFIG"
+
+    # Add environment variables to .bashrc
+    print_info "Adding CycloneDDS environment variables to .bashrc..."
+    sed -i '/^export RMW_IMPLEMENTATION=/d' "$bashrc_path"
+    sed -i '/^export CYCLONEDDS_URI=/d' "$bashrc_path"
+
+    {
+        echo 'export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp'
+        echo 'export CYCLONEDDS_URI=file://$HOME/cyclonedds.xml'
+    } >> "$bashrc_path"
+
+    print_success "CycloneDDS setup complete."
+    print_info "Config file: $CYCLONE_CONFIG"
+    print_info "Network interface: $NETWORK_IFACE"
+    print_info "Peer IP: $PEER_IP"
+}
+
 setup_velodyne() {
     print_header "Setting Up Velodyne Interface"
 
@@ -352,6 +417,7 @@ main() {
     setup_wifi "$WIFI_SSID" "$WIFI_PASSWORD"
     setup_avahi "$ROBOT_NAME"
     setup_ros_domain_id "$ROS_DOMAIN_ID"
+    setup_cyclonedds
     setup_velodyne
 
     # Final summary

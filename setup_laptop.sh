@@ -149,6 +149,86 @@ install_terminator() {
     print_success "Apt packages installed."
 }
 
+install_cyclonedds() {
+    print_info "Installing CycloneDDS RMW..."
+    apt install -y ros-humble-rmw-cyclonedds-cpp
+    print_success "CycloneDDS RMW installed."
+}
+
+setup_cyclonedds() {
+    print_header "Setting up CycloneDDS"
+
+    # Prompt for peer IP address (robot's IP)
+    read -p "Enter the robot's IP address for CycloneDDS communication: " PEER_IP
+
+    # Validate IP format
+    if ! [[ "$PEER_IP" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+        print_error "Invalid IP address format: $PEER_IP"
+        return 1
+    fi
+
+    # Auto-detect network interface based on route to peer IP
+    print_info "Detecting network interface for reaching $PEER_IP..."
+    NETWORK_IFACE=$(ip route get "$PEER_IP" 2>/dev/null | grep -oP 'dev \K\S+' | head -1)
+
+    if [ -z "$NETWORK_IFACE" ]; then
+        print_warning "Could not auto-detect interface. Listing available interfaces:"
+        ip -br addr show | grep -v "^lo"
+        read -p "Enter the network interface name manually: " NETWORK_IFACE
+    else
+        print_info "Detected interface: $NETWORK_IFACE"
+        read -p "Use this interface? (y/n): " USE_DETECTED
+        if [ "$USE_DETECTED" != "y" ]; then
+            ip -br addr show | grep -v "^lo"
+            read -p "Enter the network interface name: " NETWORK_IFACE
+        fi
+    fi
+
+    # Create cyclonedds.xml config file
+    CYCLONE_CONFIG="$HOME_DIR/cyclonedds.xml"
+    print_info "Creating CycloneDDS config at $CYCLONE_CONFIG..."
+
+    cat > "$CYCLONE_CONFIG" << EOF
+<?xml version="1.0" encoding="UTF-8" ?>
+<CycloneDDS xmlns="https://cdds.io/config">
+    <Domain id="any">
+        <General>
+            <AllowMulticast>false</AllowMulticast>
+
+            <Interfaces>
+                <NetworkInterface name="$NETWORK_IFACE" />
+            </Interfaces>
+
+        </General>
+        <Discovery>
+            <ParticipantIndex>auto</ParticipantIndex>
+            <Peers>
+                <Peer address="$PEER_IP"/>
+                <Peer address="127.0.0.1"/>
+            </Peers>
+        </Discovery>
+    </Domain>
+</CycloneDDS>
+EOF
+
+    chown "$REAL_USER:$REAL_USER" "$CYCLONE_CONFIG"
+
+    # Add environment variables to .bashrc
+    print_info "Adding CycloneDDS environment variables to .bashrc..."
+    sed -i '/^export RMW_IMPLEMENTATION=/d' "$BASHRC"
+    sed -i '/^export CYCLONEDDS_URI=/d' "$BASHRC"
+
+    {
+        echo 'export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp'
+        echo 'export CYCLONEDDS_URI=file://$HOME/cyclonedds.xml'
+    } >> "$BASHRC"
+
+    print_success "CycloneDDS setup complete."
+    print_info "Config file: $CYCLONE_CONFIG"
+    print_info "Network interface: $NETWORK_IFACE"
+    print_info "Peer IP: $PEER_IP"
+}
+
 update_repo() {
     print_info "Updating asl-tb3-* repositories..."
     sudo -u "$REAL_USER" bash <<EOF
@@ -251,10 +331,12 @@ main() {
     connect_wifi "$WIFI_SSID" "$WIFI_PASS"
     update_system
     install_terminator
+    install_cyclonedds
     update_repo
     clean_local_folders
     install_python_packages
     update_bashrc "$ROBOT_NAME" "$ROS_DOMAIN_ID"
+    setup_cyclonedds
     build_workspace
 
     echo "Setup complete. Run: source ~/.bashrc"
