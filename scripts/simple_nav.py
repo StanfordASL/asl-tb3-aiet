@@ -109,7 +109,8 @@ class SimpleNav(TaskExecutorBase):
         """
         # --- YOUR CODE HERE ---
         # TODO: Create the self.cmd_nav_publisher object
-        
+        self.cmd_nav_publisher = self.create_publisher(TurtleBotState, '/cmd_nav', 10)
+
         # --- END ---
 
 
@@ -187,7 +188,9 @@ class SimpleNav(TaskExecutorBase):
         You can set the attributes of objects with the dot operator `object.attribute = value`.
         We have to set the x, y, and theta attribute.
         """
-        
+        target_state.x = x
+        target_state.y = y
+        target_state.theta = theta
         # --- END ---
 
         self.get_logger().info(f"Navigation target set:")
@@ -202,7 +205,7 @@ class SimpleNav(TaskExecutorBase):
         """
         # --- YOUR CODE HERE ---
         # TODO: Publish target_state to your /cmd_nav publisher
-
+        self.cmd_nav_publisher.publish(target_state)
         # --- END ---
 
     def get_time_sec(self):
@@ -274,7 +277,8 @@ class SimpleNav(TaskExecutorBase):
             """
             # --- YOUR CODE HERE ---
             # TODO: Navigate 0.5m in the +x direction
-
+            self.phys_state.x += 0.75
+            self.pub_nav(self.phys_state.x, self.phys_state.y, self.phys_state.theta)
             # --- END ---
             
             self.switch_fsm_state("ROBOT_NAV_P1")
@@ -289,7 +293,9 @@ class SimpleNav(TaskExecutorBase):
                 """
                 # --- YOUR CODE HERE ---
                 # TODO: Navigate 0.5m in the -x direction
-
+                self.phys_state.x -= 0.75
+                self.phys_state.theta += np.pi
+                self.pub_nav(self.phys_state.x, self.phys_state.y, self.phys_state.theta)
                 # --- END ---
                 
                 self.switch_fsm_state("ROBOT_NAV_ORIGIN")

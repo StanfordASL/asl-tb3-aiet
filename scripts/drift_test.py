@@ -37,6 +37,13 @@ class DriftTest(Node):
 
         # Buffers
         self.cmd_vel_msg = Twist()
+        self.cmd_vel_msg.linear.x = 0.0
+        self.cmd_vel_msg.linear.y = 0.0
+        self.cmd_vel_msg.linear.z = 0.0
+        self.cmd_vel_msg.angular.x = 0.0
+        self.cmd_vel_msg.angular.y = 0.0
+        self.cmd_vel_msg.angular.z = 0.0
+
         self.current_pose = None
         self.initial_pose = None
 
