@@ -8,6 +8,7 @@ import json
 import os
 import glob
 from pathlib import Path
+import numpy as np
 
 
 def has_nonzero_control(action):
@@ -23,11 +24,20 @@ def has_nonzero_control(action):
     linear_vel = action.get('linear_velocity', {})
     angular_vel = action.get('angular_velocity', {})
 
-    # Check if any component is non-zero
-    for vel in [linear_vel, angular_vel]:
-        if any(abs(vel.get(axis, 0.0)) > 1e-10 for axis in ['x', 'y', 'z']):
-            return True
-    return False
+    linear_vel_vec = np.array([linear_vel.get(axis, 0.0) for axis in ['x', 'y', 'z']])
+    lin_vel_norm = np.linalg.norm(linear_vel_vec)
+    angular_vel_vec = np.array([angular_vel.get(axis, 0.0) for axis in ['x', 'y', 'z']])
+    angular_vel_norm = np.linalg.norm(angular_vel_vec)
+
+    if lin_vel_norm > 1e-4 and angular_vel_norm > 1e-4:
+        # We only want one velocity
+        return False
+    elif lin_vel_norm > 0.005:
+        return True
+    elif angular_vel_norm > 0.005:
+        return True
+    else:
+        return False
 
 
 def find_first_nonzero_index(actions):
@@ -72,45 +82,26 @@ def clean_demonstration(demo_path):
     if not actions:
         print(f"Skipping {demo_path.name}: Empty actions list")
         return
-
-    # Find first non-zero control input
-    first_nonzero_idx = find_first_nonzero_index(actions)
-
-    if first_nonzero_idx is None:
-        print(f"Warning: {demo_path.name} has no non-zero control inputs")
-        return
-
-    if first_nonzero_idx == 0:
-        print(f"Skipping {demo_path.name}: Already starts with non-zero control")
-        return
-
-    print(f"Processing {demo_path.name}: Removing first {first_nonzero_idx} timesteps")
-
-    # Get frame IDs to delete
-    frames_to_delete = [action['frame_id'] for action in actions[:first_nonzero_idx]]
-
-    # Delete corresponding images
-    deleted_images = 0
-    for frame_id in frames_to_delete:
-        image_path = images_dir / f'frame_{frame_id:06d}.jpg'
-        if image_path.exists():
-            image_path.unlink()
-            deleted_images += 1
-
-    # Keep only actions from first non-zero onwards
-    cleaned_actions = actions[first_nonzero_idx:]
-
-    # Re-index frame_ids to start from 0
-    for i, action in enumerate(cleaned_actions):
-        action['frame_id'] = i
+    
+    cleaned_actions = []
+    clean_id = 0
+    for i, action in enumerate(actions):
+        if not has_nonzero_control(action):
+            # Delete frame
+            image_path = images_dir / f'frame_{i:06d}.jpg'
+            if image_path.exists():
+                image_path.unlink()
+        else:
+            action['frame_id'] = clean_id
+            cleaned_actions.append(action)
+            clean_id += 1
 
     # Save updated actions.json
     with open(actions_file, 'w') as f:
         json.dump(cleaned_actions, f, indent=2)
 
-    print(f"  ✓ Removed {first_nonzero_idx} actions")
-    print(f"  ✓ Deleted {deleted_images} images")
-    print(f"  ✓ Remaining: {len(cleaned_actions)} timesteps")
+    print(f"Number of clean images = {clean_id}")
+    print(f"Deleted {len(actions)-(clean_id)} images")
 
 
 def main():
